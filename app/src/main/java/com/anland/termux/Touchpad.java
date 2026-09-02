@@ -54,6 +54,9 @@ public final class Touchpad {
     private float startX1, startY1;
     private float lastX2, lastY2;
     private long downTime1;
+    // Kept across cancel() so a physical clickpad press can inspect the contact
+    // positions that were maintained by the preceding gesture events.
+    private boolean clickpadBaselineValid = false;
     private final float touchSlop;
 
     private boolean isSingleTapCandidate = false;
@@ -231,6 +234,46 @@ public final class Touchpad {
     }
 
     /**
+     * Resolve a clickpad's generic primary button to Linux left/right. The contact
+     * that moved least is treated as the pressing finger and its horizontal
+     * position selects the half of the pad. Coordinates are compared in the same
+     * output space used by gesture recognition.
+     */
+    int clickpadButton(MotionEvent event) {
+        if (!clickpadBaselineValid || event.getPointerCount() <= 0)
+            return 0x110; // BTN_LEFT
+        int limit = Math.min(event.getPointerCount(), 2);
+        int slowestIndex = 0;
+        float slowestSpeed = Float.MAX_VALUE;
+        for (int i = 0; i < limit; i++) {
+            float lastX = i == 0 ? lastX1 : lastX2;
+            float lastY = i == 0 ? lastY1 : lastY2;
+            float curX = toOutputX(event.getX(i));
+            float curY = toOutputY(event.getY(i));
+            float dx = curX - lastX;
+            float dy = curY - lastY;
+            float speed = dx * dx + dy * dy;
+            if (speed < slowestSpeed) {
+                slowestSpeed = speed;
+                slowestIndex = i;
+            }
+        }
+        float curX = toOutputX(event.getX(slowestIndex));
+        float midpoint = outputWidth > 0 ? outputWidth / 2f : curX;
+        return curX < midpoint ? 0x110 : 0x111; // BTN_LEFT / BTN_RIGHT
+    }
+
+    private float toOutputX(float x) {
+        return inputRangeX > 0f && outputWidth > 0
+                ? (x - inputMinX) * (outputWidth / inputRangeX) : x;
+    }
+
+    private float toOutputY(float y) {
+        return inputRangeY > 0f && outputHeight > 0
+                ? (y - inputMinY) * (outputHeight / inputRangeY) : y;
+    }
+
+    /**
      * Interpret one event from this device.
      *
      * Events belonging to a gesture this class does not implement are forwarded as
@@ -369,6 +412,12 @@ public final class Touchpad {
     private boolean recognize(MotionEvent event) {
         int action = event.getActionMasked();
         int pointerCount = event.getPointerCount();
+
+        if (action == MotionEvent.ACTION_DOWN || action == MotionEvent.ACTION_POINTER_DOWN
+                || action == MotionEvent.ACTION_MOVE)
+            clickpadBaselineValid = true;
+        else if (action == MotionEvent.ACTION_UP || action == MotionEvent.ACTION_CANCEL)
+            clickpadBaselineValid = false;
 
         // Once declined, stay declined: the gesture is mid-way through being
         // forwarded as touch and its pointer-up events still have to get there.

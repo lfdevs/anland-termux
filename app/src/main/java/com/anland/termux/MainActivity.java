@@ -128,6 +128,9 @@ public class MainActivity extends Activity
     private final float[] mCapturedTouchpadResolvedDelta = new float[2];
     private final SparseArray<Float> mButtonDragLastX = new SparseArray<>();
     private final SparseArray<Float> mButtonDragLastY = new SparseArray<>();
+    // Single-button clickpads report every physical press as BUTTON_PRIMARY. Keep
+    // the resolved Linux button latched for the duration of that press.
+    private int mLastTouchpadButtonPressed = 0;
     private String mDisplayCutoutMode = DisplayCutoutMode.HIDE_ALL;
     private boolean mPipTransitionPending = false;
     private boolean mVirtualKeyboardVisibleBeforePip = false;
@@ -1527,10 +1530,12 @@ public class MainActivity extends Activity
             sendCapturedScrollAxes(event, -1);
         }
 
-        if (action == MotionEvent.ACTION_CANCEL)
+        if (action == MotionEvent.ACTION_CANCEL) {
+            mLastTouchpadButtonPressed = 0;
             releaseAllMouseButtons();
-        else
-            updateMouseButtonStateFromEvent(event);
+        } else {
+            updateTouchpadButtonStateFromEvent(event);
+        }
         return true;
     }
 
@@ -1828,6 +1833,7 @@ public class MainActivity extends Activity
         mCapturedTouchpadLastCentroidY = 0f;
         mButtonDragLastX.clear();
         mButtonDragLastY.clear();
+        mLastTouchpadButtonPressed = 0;
     }
 
     private int capturedPointerViewWidth() {
@@ -1948,6 +1954,30 @@ public class MainActivity extends Activity
 
     private void updateMouseButtonStateFromEvent(MotionEvent event) {
         updateMouseButtonState(effectiveButtonState(event));
+    }
+
+    /** Resolve clickpad primary presses to left/right from the slowest contact. */
+    private void updateTouchpadButtonStateFromEvent(MotionEvent event) {
+        int action = event.getActionMasked();
+        int buttonState = event.getButtonState();
+        if (action == MotionEvent.ACTION_BUTTON_PRESS) {
+            int button = mCapturedTouchpad != null
+                    ? mCapturedTouchpad.clickpadButton(event) : 0x110;
+            mLastTouchpadButtonPressed = button == 0x111
+                    ? MotionEvent.BUTTON_SECONDARY : MotionEvent.BUTTON_PRIMARY;
+            buttonState &= ~(MotionEvent.BUTTON_PRIMARY | MotionEvent.BUTTON_SECONDARY);
+            buttonState |= mLastTouchpadButtonPressed;
+        } else if (action == MotionEvent.ACTION_BUTTON_RELEASE) {
+            // Release the button chosen at press time even if the finger drifted.
+            buttonState &= ~(MotionEvent.BUTTON_PRIMARY | MotionEvent.BUTTON_SECONDARY);
+            mLastTouchpadButtonPressed = 0;
+        } else if (mLastTouchpadButtonPressed != 0) {
+            buttonState &= ~(MotionEvent.BUTTON_PRIMARY | MotionEvent.BUTTON_SECONDARY);
+            buttonState |= mLastTouchpadButtonPressed;
+        } else {
+            buttonState = effectiveButtonState(event);
+        }
+        updateMouseButtonState(buttonState);
     }
 
     private void updateMouseButtons(MotionEvent event) {
