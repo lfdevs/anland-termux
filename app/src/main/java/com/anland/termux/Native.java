@@ -36,4 +36,5 @@ public final class Native {
     public static native void nativeSendTextInput(byte[] data);
     public static native void nativeSetMicEnabled(boolean enabled);
     public static native void nativeSetAudioLatency(int speakerMs, int micMs);
+    public static native void nativeSetAudioKeepalive(boolean enabled);
 }

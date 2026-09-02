@@ -84,6 +84,8 @@
     <string name="mic_hint">Desktop audio always plays through this device\'s speaker. Enabling this also sends the mic the other way. Takes effect on next connect (reopen the app).</string>
     <string name="camera_switch">Forward camera to desktop</string>
     <string name="camera_hint">Lets the desktop open this device\'s camera(s) as a video source. The camera only turns on while the desktop is actively recording. Takes effect on next return to the app; first use prompts for the camera permission.</string>
+    <string name="audio_keepalive_switch">Audio keep-alive</string>
+    <string name="audio_keepalive_hint">Keep the audio output stream running so short Linux sounds (volume ticks, key clicks) always play instantly. Costs a little standby power. Off: the audio path sleeps after ~1.5 s of desktop silence and wakes for the next sound. If the audible latency does not match your preference, you may need to tune the Audio latency presets below.</string>
     <string name="audio_latency_title">Audio latency</string>
     <string name="latency_speaker_label">Speaker (desktop → phone)</string>
     <string name="latency_mic_label">Microphone (phone → desktop)</string>

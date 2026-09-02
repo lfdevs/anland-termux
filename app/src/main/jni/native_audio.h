@@ -12,10 +12,13 @@
  *                datagrams to the socket (the producer exposes them as a Linux
  *                recording source). Only active while the mic is enabled.
  *
- * The AAudio streams are opened once and stay open across reconnects; the active
- * display_ctx (and thus the live audio fd) is swapped via audio_set_ctx(). While
- * detached the playback stream simply has nothing to play and the capture stream's
- * PCM is dropped. The audio fd is owned by the display library -- never closed here.
+ * Playback is driven by an AAudio data callback. The socket thread appends PCM to a
+ * frame-aligned ring buffer and the callback supplies near-silent keepalive samples
+ * on underrun. The output stream is rebuilt independently after AAudio failures and
+ * may idle-stop after silence; the display connection is never rebuilt for this.
+ * The capture stream is opened once and only started while the mic is enabled. The
+ * active display_ctx (and thus the live audio fd) is swapped via audio_set_ctx().
+ * The audio fd is owned by the display library -- never closed here.
  */
 
 void audio_start(void);
@@ -35,5 +38,9 @@ void audio_set_mic_enabled(int enabled);
  * producer, which applies it as the PipeWire node.latency. Takes effect immediately
  * (the formats are re-announced on the live connection). */
 void audio_set_latency(int speaker_ms, int mic_ms);
+
+/* Keep the output stream hot for burst reliability, or allow it to idle-stop after
+ * silence to save standby power. Disabled by default. */
+void audio_set_keepalive(int enabled);
 
 #endif

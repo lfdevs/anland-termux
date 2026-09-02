@@ -993,3 +993,10 @@ Java_com_anland_termux_Native_nativeSetAudioLatency(
 {
     audio_set_latency(speakerMs, micMs);
 }
+
+JNIEXPORT void JNICALL
+Java_com_anland_termux_Native_nativeSetAudioKeepalive(
+    JNIEnv *env, jclass clazz, jboolean enabled)
+{
+    audio_set_keepalive(enabled == JNI_TRUE);
+}

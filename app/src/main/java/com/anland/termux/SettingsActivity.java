@@ -45,6 +45,7 @@ public class SettingsActivity extends Activity {
     private static final String KEY_USE_ROOT = "use_root";
     private static final String KEY_MIC_ENABLED = "mic_enabled";
     private static final String KEY_CAMERA_ENABLED = "camera_enabled";
+    private static final String KEY_AUDIO_KEEPALIVE = "audio_keepalive";
     private static final String KEY_SPEAKER_LATENCY_MS = "speaker_latency_ms";
     private static final String KEY_MIC_LATENCY_MS = "mic_latency_ms";
     private static final String KEY_ACCESSIBILITY_ENABLED = "accessibility_key_intercept";
@@ -942,6 +943,25 @@ public class SettingsActivity extends Activity {
         cameraHint.setTextColor(getColor(R.color.settings_text_secondary));
         cameraHint.setPadding(0, dp(4), 0, 0);
         root.addView(cameraHint);
+
+        // Keep the output stream hot for short Linux UI sounds, or let it
+        // idle-stop after silence to save standby power. Disabled by default.
+        Switch keepaliveSwitch = new Switch(this);
+        keepaliveSwitch.setText(R.string.audio_keepalive_switch);
+        keepaliveSwitch.setTextSize(14);
+        keepaliveSwitch.setPadding(0, dp(16), 0, 0);
+        keepaliveSwitch.setChecked(prefs.getBoolean(KEY_AUDIO_KEEPALIVE, false));
+        keepaliveSwitch.setOnCheckedChangeListener((v, checked) ->
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
+                .putBoolean(KEY_AUDIO_KEEPALIVE, checked).apply());
+        root.addView(keepaliveSwitch);
+
+        TextView keepaliveHint = new TextView(this);
+        keepaliveHint.setText(R.string.audio_keepalive_hint);
+        keepaliveHint.setTextSize(12);
+        keepaliveHint.setTextColor(getColor(R.color.settings_text_secondary));
+        keepaliveHint.setPadding(0, dp(4), 0, 0);
+        root.addView(keepaliveHint);
 
         // Audio latency presets, separately for the speaker (playback) and microphone
         // (capture) paths. The chosen buffer is forwarded to the producer's PipeWire
