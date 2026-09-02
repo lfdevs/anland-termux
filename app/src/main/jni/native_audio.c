@@ -50,6 +50,10 @@ struct audio_bridge {
     volatile int cap_latency_ms;
     volatile bool resend_formats;   /* a preset changed -> re-announce on the live fd */
 
+    /* Set by the AAudio error callback or a failed playback write. The playback
+     * thread owns stream teardown and recreation. */
+    volatile bool play_rebuild;
+
     uint8_t rx[MAX_DGRAM];
 };
 
@@ -63,7 +67,19 @@ static int current_fd(void)
 
 /* ---- AAudio stream helpers ---- */
 
-static AAudioStream *open_stream(aaudio_direction_t dir, int channels)
+static void play_error_cb(AAudioStream *stream, void *user_data,
+                          aaudio_result_t error)
+{
+    struct audio_bridge *b = user_data;
+    (void)stream;
+    LOGE("playback stream error: %s -- scheduling rebuild",
+         AAudio_convertResultToText(error));
+    b->play_rebuild = true;
+}
+
+static AAudioStream *open_stream(aaudio_direction_t dir, int channels,
+                                 AAudioStream_errorCallback error_cb,
+                                 void *user_data)
 {
     AAudioStreamBuilder *b = NULL;
     if (AAudio_createStreamBuilder(&b) != AAUDIO_OK || !b)
@@ -76,6 +92,8 @@ static AAudioStream *open_stream(aaudio_direction_t dir, int channels)
     AAudioStreamBuilder_setFormat(b, AAUDIO_FORMAT_PCM_I16);
     AAudioStreamBuilder_setPerformanceMode(b, AAUDIO_PERFORMANCE_MODE_LOW_LATENCY);
     AAudioStreamBuilder_setSharingMode(b, AAUDIO_SHARING_MODE_SHARED);
+    if (error_cb)
+        AAudioStreamBuilder_setErrorCallback(b, error_cb, user_data);
 
     AAudioStream *stream = NULL;
     aaudio_result_t r = AAudioStreamBuilder_openStream(b, &stream);
@@ -120,6 +138,26 @@ static void send_format(int fd, uint32_t role, uint32_t rate, uint32_t channels,
 
 /* ---- playback: socket -> speaker ---- */
 
+/* Reopen only the output stream after an AAudio route/error failure. The display
+ * connection and native window remain untouched. */
+static bool reopen_play_stream(void)
+{
+    if (g.play) {
+        AAudioStream_requestStop(g.play);
+        AAudioStream_close(g.play);
+        g.play = NULL;
+    }
+    g.play = open_stream(AAUDIO_DIRECTION_OUTPUT, WANT_PLAY_CHANNELS,
+                         play_error_cb, &g);
+    if (!g.play)
+        return false;
+    g.play_rate = AAudioStream_getSampleRate(g.play);
+    g.play_channels = AAudioStream_getChannelCount(g.play);
+    AAudioStream_requestStart(g.play);
+    LOGI("playback stream opened: %d Hz x%d", g.play_rate, g.play_channels);
+    return true;
+}
+
 static void *play_thread_func(void *arg)
 {
     (void)arg;
@@ -128,6 +166,16 @@ static void *play_thread_func(void *arg)
     bool had_fd = false;   /* drives a one-shot format handshake per connection */
 
     while (g.running) {
+        if (g.play_rebuild || !g.play) {
+            g.play_rebuild = false;
+            if (!reopen_play_stream()) {
+                usleep(200000);
+                continue;
+            }
+            had_fd = false;
+            g.resend_formats = true;
+        }
+
         int fd = current_fd();
         if (fd < 0) {
             had_fd = false;
@@ -170,10 +218,17 @@ static void *play_thread_func(void *arg)
         if (frames <= 0)
             continue;
 
-        /* Blocking write with a short timeout: on underrun/overrun AAudio paces us;
-         * we never stall the loop longer than the timeout. */
-        AAudioStream_write(g.play, g.rx + sizeof(struct audio_msg), frames,
-                           20 * 1000 * 1000L);
+        /* A negative write result means the stream disconnected or became invalid;
+         * rebuild it on the next loop iteration instead of writing into a dead
+         * stream indefinitely. */
+        aaudio_result_t wr = AAudioStream_write(
+            g.play, g.rx + sizeof(struct audio_msg), frames,
+            20 * 1000 * 1000L);
+        if (wr < 0) {
+            LOGE("playback write failed: %s -- rebuilding stream",
+                 AAudio_convertResultToText(wr));
+            g.play_rebuild = true;
+        }
     }
 
     LOGI("playback thread stopped");
@@ -249,18 +304,13 @@ void audio_start(void)
      * chose -- this is the real playback capability we negotiate with the producer. */
     g.play_rate = 48000;
     g.play_channels = WANT_PLAY_CHANNELS;
-    g.play = open_stream(AAUDIO_DIRECTION_OUTPUT, WANT_PLAY_CHANNELS);
-    if (g.play) {
-        g.play_rate = AAudioStream_getSampleRate(g.play);
-        g.play_channels = AAudioStream_getChannelCount(g.play);
-        AAudioStream_requestStart(g.play);
-    }
+    reopen_play_stream();
 
     /* Open the input stream even before the mic is enabled; it is started/stopped
      * by the capture thread. May be NULL if RECORD_AUDIO is not granted. */
     g.cap_rate = 48000;
     g.cap_channels = WANT_CAP_CHANNELS;
-    g.rec = open_stream(AAUDIO_DIRECTION_INPUT, WANT_CAP_CHANNELS);
+    g.rec = open_stream(AAUDIO_DIRECTION_INPUT, WANT_CAP_CHANNELS, NULL, NULL);
     if (g.rec) {
         g.cap_rate = AAudioStream_getSampleRate(g.rec);
         g.cap_channels = AAudioStream_getChannelCount(g.rec);
