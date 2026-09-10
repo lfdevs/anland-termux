@@ -133,7 +133,7 @@ public class SettingsActivity extends Activity {
         scroll.addView(content);
         setContentView(scroll);
 
-        // Edge-to-edge is enforced on Android 15+ (targetSdk 36): the system no
+        // Edge-to-edge is enforced on Android 15+ (targetSdk 37): the system no
         // longer auto-resizes the window for the IME, so a manifest "adjustResize"
         // is ignored and the soft keyboard overlaps the bottom EditTexts. Take over
         // inset handling and pad the scrollable content by the system-bar + IME

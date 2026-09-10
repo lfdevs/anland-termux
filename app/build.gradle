@@ -4,7 +4,8 @@ plugins {
 
 android {
     namespace = "com.anland.termux"
-    compileSdk = 36
+    compileSdk = 37
+    compileSdkMinor = 2
 
     buildFeatures {
         buildConfig = true
@@ -23,7 +24,7 @@ android {
     defaultConfig {
         applicationId = "com.anland.termux"
         minSdk = 30
-        targetSdk = 36
+        targetSdk = 37
         versionCode = 8
         versionName = "5.13.3"
 
