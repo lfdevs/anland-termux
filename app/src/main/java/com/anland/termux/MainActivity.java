@@ -19,6 +19,9 @@ import android.graphics.Color;
 import android.graphics.Insets;
 import android.hardware.display.DisplayManager;
 import android.content.SharedPreferences;
+import android.media.AudioAttributes;
+import android.media.AudioFocusRequest;
+import android.media.AudioManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -69,6 +72,8 @@ public class MainActivity extends Activity
     // Latency presets in ms; 0 = engine default. Shared with SettingsActivity.
     static final String KEY_SPEAKER_LATENCY_MS = "speaker_latency_ms";
     static final String KEY_MIC_LATENCY_MS = "mic_latency_ms";
+    // Audio keep-alive toggle. Shared with SettingsActivity.
+    static final String KEY_AUDIO_KEEPALIVE = "audio_keepalive";
     private static final int REQ_RECORD_AUDIO = 1001;
     private static final int REQ_CAMERA = 1002;
     // Camera service fds/threads are created once and persist across reconnects;
@@ -77,6 +82,10 @@ public class MainActivity extends Activity
     private ICompatibleBridge compatibleBridge;
     private boolean compatibleFdReady = false;
     private boolean compatibleReceiverRegistered = false;
+    // Media audio focus keeps volume controls and Android audio policy aligned with
+    // the AAudio playback stream while this window is in the foreground.
+    private AudioManager mAudioManager;
+    private AudioFocusRequest mAudioFocusRequest;
     private static final String DEFAULT_SOCKET_PATH = "/data/data/com.termux/files/usr/tmp/anland/display_daemon.sock";
     private static final String KEY_ACCESSIBILITY_ENABLED = "accessibility_key_intercept";
     private static final String KEY_EXTRA_KEYS_ENABLED = "extra_keys_bar";
@@ -128,6 +137,9 @@ public class MainActivity extends Activity
     private final float[] mCapturedTouchpadResolvedDelta = new float[2];
     private final SparseArray<Float> mButtonDragLastX = new SparseArray<>();
     private final SparseArray<Float> mButtonDragLastY = new SparseArray<>();
+    // Single-button clickpads report every physical press as BUTTON_PRIMARY. Keep
+    // the resolved Linux button latched for the duration of that press.
+    private int mLastTouchpadButtonPressed = 0;
     private String mDisplayCutoutMode = DisplayCutoutMode.HIDE_ALL;
     private boolean mPipTransitionPending = false;
     private boolean mVirtualKeyboardVisibleBeforePip = false;
@@ -285,6 +297,7 @@ public class MainActivity extends Activity
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        setupMediaAudio();
         applyScreenOrientation();
 
         sInstance = this;
@@ -624,10 +637,46 @@ public class MainActivity extends Activity
         surfaceView.setPointerIcon(PointerIcon.getSystemIcon(this, PointerIcon.TYPE_NULL));
     }
 
+    /* Bind hardware volume controls and media focus to the same usage as the
+     * AAudio output stream. This prevents Android audio policy from throttling
+     * short Linux UI sounds while the desktop window is foregrounded. */
+    private void setupMediaAudio() {
+        setVolumeControlStream(AudioManager.STREAM_MUSIC);
+        mAudioManager = getSystemService(AudioManager.class);
+        if (mAudioManager == null)
+            return;
+
+        AudioAttributes attrs = new AudioAttributes.Builder()
+                .setUsage(AudioAttributes.USAGE_MEDIA)
+                .setContentType(AudioAttributes.CONTENT_TYPE_MUSIC)
+                .build();
+        mAudioFocusRequest = new AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN)
+                .setAudioAttributes(attrs)
+                .setWillPauseWhenDucked(false)
+                .setOnAudioFocusChangeListener(change ->
+                        Log.i(TAG, "audio focus change: " + change))
+                .build();
+    }
+
+    private void requestMediaAudioFocus() {
+        if (mAudioManager == null || mAudioFocusRequest == null)
+            return;
+        int result = mAudioManager.requestAudioFocus(mAudioFocusRequest);
+        if (result != AudioManager.AUDIOFOCUS_REQUEST_GRANTED)
+            Log.w(TAG, "media audio focus not granted: " + result);
+    }
+
+    private void abandonMediaAudioFocus() {
+        if (mAudioManager != null && mAudioFocusRequest != null)
+            mAudioManager.abandonAudioFocusRequest(mAudioFocusRequest);
+    }
+
     @Override
     protected void onResume() {
         super.onResume();
         mPipTransitionPending = false;
+
+        requestMediaAudioFocus();
 
         String displayCutoutMode = DisplayCutoutMode.get(
             getSharedPreferences(PREFS_NAME, MODE_PRIVATE));
@@ -694,6 +743,7 @@ public class MainActivity extends Activity
             pushRefreshRate();
             applyMicState();
             applyAudioLatency();
+            applyAudioKeepalive();
         }
 
         // ===== 重新读取触摸板设置 =====
@@ -807,6 +857,7 @@ public class MainActivity extends Activity
             dm.unregisterDisplayListener(displayListener);
         if (!mPipTransitionPending && !isInPictureInPictureMode())
             stopNative();
+        abandonMediaAudioFocus();
     }
 
     private boolean hasPipPermission() {
@@ -853,6 +904,7 @@ public class MainActivity extends Activity
 
     @Override
     protected void onDestroy() {
+        abandonMediaAudioFocus();
         stopNative();
         if (compatibleReceiverRegistered) {
             unregisterReceiver(compatibleBridgeReceiver);
@@ -904,6 +956,11 @@ public class MainActivity extends Activity
         int speakerMs = prefs.getInt(KEY_SPEAKER_LATENCY_MS, 0);
         int micMs = prefs.getInt(KEY_MIC_LATENCY_MS, 0);
         Native.nativeSetAudioLatency(speakerMs, micMs);
+    }
+
+    private void applyAudioKeepalive() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        Native.nativeSetAudioKeepalive(prefs.getBoolean(KEY_AUDIO_KEEPALIVE, false));
     }
 
     private void applyMicState() {
@@ -964,6 +1021,7 @@ public class MainActivity extends Activity
         pushRefreshRate();
         applyMicState();
         applyAudioLatency();
+        applyAudioKeepalive();
 
         // ===== 更新屏幕尺寸并重置平滑状态 =====
         virtualTouchpad.onSurfaceChanged();
@@ -1527,10 +1585,12 @@ public class MainActivity extends Activity
             sendCapturedScrollAxes(event, -1);
         }
 
-        if (action == MotionEvent.ACTION_CANCEL)
+        if (action == MotionEvent.ACTION_CANCEL) {
+            mLastTouchpadButtonPressed = 0;
             releaseAllMouseButtons();
-        else
-            updateMouseButtonStateFromEvent(event);
+        } else {
+            updateTouchpadButtonStateFromEvent(event);
+        }
         return true;
     }
 
@@ -1828,6 +1888,7 @@ public class MainActivity extends Activity
         mCapturedTouchpadLastCentroidY = 0f;
         mButtonDragLastX.clear();
         mButtonDragLastY.clear();
+        mLastTouchpadButtonPressed = 0;
     }
 
     private int capturedPointerViewWidth() {
@@ -1948,6 +2009,30 @@ public class MainActivity extends Activity
 
     private void updateMouseButtonStateFromEvent(MotionEvent event) {
         updateMouseButtonState(effectiveButtonState(event));
+    }
+
+    /** Resolve clickpad primary presses to left/right from the slowest contact. */
+    private void updateTouchpadButtonStateFromEvent(MotionEvent event) {
+        int action = event.getActionMasked();
+        int buttonState = event.getButtonState();
+        if (action == MotionEvent.ACTION_BUTTON_PRESS) {
+            int button = mCapturedTouchpad != null
+                    ? mCapturedTouchpad.clickpadButton(event) : 0x110;
+            mLastTouchpadButtonPressed = button == 0x111
+                    ? MotionEvent.BUTTON_SECONDARY : MotionEvent.BUTTON_PRIMARY;
+            buttonState &= ~(MotionEvent.BUTTON_PRIMARY | MotionEvent.BUTTON_SECONDARY);
+            buttonState |= mLastTouchpadButtonPressed;
+        } else if (action == MotionEvent.ACTION_BUTTON_RELEASE) {
+            // Release the button chosen at press time even if the finger drifted.
+            buttonState &= ~(MotionEvent.BUTTON_PRIMARY | MotionEvent.BUTTON_SECONDARY);
+            mLastTouchpadButtonPressed = 0;
+        } else if (mLastTouchpadButtonPressed != 0) {
+            buttonState &= ~(MotionEvent.BUTTON_PRIMARY | MotionEvent.BUTTON_SECONDARY);
+            buttonState |= mLastTouchpadButtonPressed;
+        } else {
+            buttonState = effectiveButtonState(event);
+        }
+        updateMouseButtonState(buttonState);
     }
 
     private void updateMouseButtons(MotionEvent event) {
