@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-26.04
 
     env:
-      GRADLE_VERSION: "9.6.0"
+      GRADLE_VERSION: "9.7.1"
       ANDROID_NDK_VERSION: "29.0.14206865"
 
     steps:

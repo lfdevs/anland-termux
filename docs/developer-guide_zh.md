@@ -205,8 +205,8 @@ scripts/startplasma-anland.sh
 环境要求：
 
 ```text
-Android Gradle Plugin 9.2.1
-Gradle 9.6.0
+Android Gradle Plugin 9.4.0
+Gradle 9.7.1
 Android NDK 29.0.14206865
 minSdk 30
 compileSdk 37
@@ -370,7 +370,7 @@ Termux 软件包关联的 Pull requests：https://github.com/termux/termux-packa
 
 - `ref`：必填，要构建的 Git 引用，可以是分支、TAG 或 commit；默认值为 `termux`。
 
-构建环境固定使用 JDK 21、Gradle 9.6.0 和 Android NDK 29.0.14206865，并同时调用 `tools/build-app.sh` 与 `tools/build-compatible-app.sh`。Pull request 构建会在 compatible 后缀之前加入 `-debug-<短 SHA>`，例如 `AnlandTermux-5.13.2-debug-70d1b85-compatible.apk`。
+构建环境固定使用 JDK 21、Gradle 9.7.1 和 Android NDK 29.0.14206865，并同时调用 `tools/build-app.sh` 与 `tools/build-compatible-app.sh`。Pull request 构建会在 compatible 后缀之前加入 `-debug-<短 SHA>`，例如 `AnlandTermux-5.13.2-debug-70d1b85-compatible.apk`。
 
 ### Build Docker Images
 

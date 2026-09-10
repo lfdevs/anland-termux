@@ -218,8 +218,8 @@ When troubleshooting Qualcomm GPU hangs or rendering errors, you can also try op
 Requirements:
 
 ```text
-Android Gradle Plugin 9.2.1
-Gradle 9.6.0
+Android Gradle Plugin 9.4.0
+Gradle 9.7.1
 Android NDK 29.0.14206865
 minSdk 30
 compileSdk 37
@@ -385,7 +385,7 @@ Manual input:
 
 - `ref`: required Git reference to build; may be a branch, TAG, or commit. The default is `termux`.
 
-The build environment is fixed to JDK 21, Gradle 9.6.0, and Android NDK 29.0.14206865, and invokes both `tools/build-app.sh` and `tools/build-compatible-app.sh`. Pull-request builds add `-debug-<short SHA>` before the compatible suffix, for example `AnlandTermux-5.13.2-debug-70d1b85-compatible.apk`.
+The build environment is fixed to JDK 21, Gradle 9.7.1, and Android NDK 29.0.14206865, and invokes both `tools/build-app.sh` and `tools/build-compatible-app.sh`. Pull-request builds add `-debug-<short SHA>` before the compatible suffix, for example `AnlandTermux-5.13.2-debug-70d1b85-compatible.apk`.
 
 ### Build Docker Images
 

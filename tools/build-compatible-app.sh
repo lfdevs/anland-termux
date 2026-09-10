@@ -17,8 +17,8 @@ if ! command -v gradle >/dev/null 2>&1; then
 fi
 
 GRADLE_VERSION="$(gradle --version | awk '/^Gradle / { print $2; exit }')"
-if [[ "$GRADLE_VERSION" != "9.6.0" ]]; then
-  echo "Gradle 9.6.0 is required, found: ${GRADLE_VERSION:-unknown}" >&2
+if [[ "$GRADLE_VERSION" != "9.7.1" ]]; then
+  echo "Gradle 9.7.1 is required, found: ${GRADLE_VERSION:-unknown}" >&2
   exit 1
 fi
 
