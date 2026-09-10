@@ -7,8 +7,6 @@ body:
     attributes:
       value: |
         Thanks for taking the time to fill out this form! **We cannot guarantee that requested features will be added** -- even if a feature can be implemented, it may take several months because we can only work on development in our spare time.
-
-        If your device can run Chroot / Droidspaces containers, please prioritize submitting a feature request to [upstream Anland](https://github.com/superturtlee/anland) (if upstream also does not have this feature).
   - type: checkboxes
     id: confirmation
     attributes:

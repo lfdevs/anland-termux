@@ -4,7 +4,7 @@
 
 ---
 
-Use [Anland](https://github.com/superturtlee/anland) in Termux, including **Termux native** and **PRoot/Chroot/LXC** containers.
+Use [Anland](https://github.com/SuperTurtleDev/anland/tree/legacy) in Termux, including **Termux native** and **PRoot/Chroot/LXC** containers.
 
 ## Features
 
@@ -43,6 +43,6 @@ See [Anland: Termux Developer Documentation](docs/developer-guide.md)
 
 ## Acknowledgements
 
-* [**Anland**](https://github.com/superturtlee/anland): Introduced a new solution for running Linux Wayland applications on Android and is this project's upstream.
+* [**Anland**](https://github.com/SuperTurtleDev/anland/tree/legacy): Introduced a new solution for running Linux Wayland applications on Android and is this project's upstream.
 * [**Termux:X11**](https://github.com/termux/termux-x11): Inspired the Unix socket communication between Android apps and provided a reference for implementing enhancements such as the toolbar.
 * [**PRoot-Distro**](https://github.com/termux/proot-distro): Enables Docker-packaged container images to run on Android.

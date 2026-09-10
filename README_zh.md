@@ -4,7 +4,7 @@
 
 ---
 
-在 Termux 中使用 [Anland](https://github.com/superturtlee/anland)，支持 **Termux 原生环境**以及 **PRoot/Chroot/LXC** 容器。
+在 Termux 中使用 [Anland](https://github.com/SuperTurtleDev/anland/tree/legacy)，支持 **Termux 原生环境**以及 **PRoot/Chroot/LXC** 容器。
 
 ## 特性
 
@@ -43,6 +43,6 @@ Anland: Termux 的安装和使用说明请参见：[Anland：Termux 用户指南
 
 ## 致谢
 
-* [**Anland**](https://github.com/superturtlee/anland): 为在 Android 上运行 Linux Wayland 应用提出了全新的解决方案，同时也是本项目的上游。
+* [**Anland**](https://github.com/SuperTurtleDev/anland/tree/legacy): 为在 Android 上运行 Linux Wayland 应用提出了全新的解决方案，同时也是本项目的上游。
 * [**Termux:X11**](https://github.com/termux/termux-x11): 为跨 Android 应用的 Unix Socket 通信提供了思路，同时也为扩展栏等增强功能的实现提供了参考。
 * [**PRoot-Distro**](https://github.com/termux/proot-distro): 为在 Android 上运行使用 Docker 打包的容器镜像提供了支持。
