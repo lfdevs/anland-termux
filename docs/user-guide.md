@@ -147,7 +147,7 @@ Or, to run Anland: Termux with GNOME in Termux Native using the GitHub Termux re
 
 4. Install the Freedreno (KGSL) driver in your runtime environment.
 
-   For Termux Native, follow the instructions on this page: <https://github.com/lfdevs/termux-packages/releases/tag/freedreno-26.2.0-devel-20260709>. If you use Weston, use this version instead: <https://github.com/lfdevs/termux-packages/releases/tag/freedreno-26.2.0-devel-20260709-weston>.
+   For Termux Native, follow the instructions on this page: <https://github.com/lfdevs/termux-packages/releases/tag/freedreno-26.3.0-devel-20260824>. If you use Weston, use this version instead: <https://github.com/lfdevs/termux-packages/releases/tag/freedreno-26.2.0-devel-20260709-weston>.
 
    For Linux containers, follow the instructions on this page: <https://github.com/lfdevs/mesa-for-android-container/releases/latest>
 
