@@ -1586,10 +1586,12 @@ public class MainActivity extends Activity
         }
 
         if (action == MotionEvent.ACTION_CANCEL) {
-            mLastTouchpadButtonPressed = 0;
             releaseAllMouseButtons();
         } else {
-            updateTouchpadButtonStateFromEvent(event);
+            // Clickpad button resolution is only valid for captured touchpads.
+            // Relative mice report their actual button in the MotionEvent, so
+            // keep their press/release pair intact (especially ACTION_BUTTON_RELEASE).
+            updateMouseButtonStateFromEvent(event);
         }
         return true;
     }
@@ -1679,10 +1681,12 @@ public class MainActivity extends Activity
             }
         }
 
-        if (action == MotionEvent.ACTION_CANCEL)
+        if (action == MotionEvent.ACTION_CANCEL) {
+            mLastTouchpadButtonPressed = 0;
             releaseAllMouseButtons();
-        else
-            updateMouseButtonStateFromEvent(event);
+        } else {
+            updateTouchpadButtonStateFromEvent(event);
+        }
         return true;
     }
 
