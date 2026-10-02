@@ -357,6 +357,13 @@ public final class SystemIME {
         return insets != null && insets.isVisible(WindowInsets.Type.ime());
     }
 
+    // The hidden editor remains enabled from the show request until the IME is
+    // explicitly released. This latch is more reliable than IME insets, which
+    // can lag or be absent in freeform mode.
+    boolean isImeWanted() {
+        return hiddenInput.isEnabled();
+    }
+
     void releaseHiddenInput() {
         if (!hiddenInput.isEnabled()) return;  // already released
         hiddenInput.clearFocus();
