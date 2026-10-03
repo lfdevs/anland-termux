@@ -1281,6 +1281,13 @@ public class MainActivity extends Activity
         if (handleSoftKeyboardToggleKey(event))
             return true;
 
+        // Before swallowing repeats, turn Backspace into an explicit tap while
+        // the soft keyboard owns the hidden editor. Some IMEs consume the UP
+        // event after handling DEL, which would otherwise leave Linux holding
+        // the key down.
+        if (handleImeDelTap(event))
+            return true;
+
         Boolean actionHandled = handleConfiguredUserAction(event);
         if (actionHandled != null)
             return actionHandled || super.onKeyDown(keyCode, event);
@@ -1383,12 +1390,34 @@ public class MainActivity extends Activity
         if (handleSoftKeyboardToggleKey(event))
             return true;
 
+        if (handleImeDelTap(event))
+            return true;
+
         Boolean actionHandled = handleConfiguredUserAction(event);
         if (actionHandled != null)
             return actionHandled || super.onKeyUp(keyCode, event);
 
         forwardKeyToLinux(event);
         releasePointerCaptureOnEscape(event);
+        return true;
+    }
+
+    /**
+     * Forward Backspace as a press/release tap while the system IME is active.
+     * LatinIME may consume the key-up after deleting, leaving a normal key-down
+     * forwarded to Linux without its matching release. Repeats reach this path
+     * before the general repeat suppression, so held Backspace still repeats.
+     */
+    private boolean handleImeDelTap(KeyEvent event) {
+        if (event.getKeyCode() != KeyEvent.KEYCODE_DEL || !systemIme.isImeWanted())
+            return false;
+        if (event.getAction() == KeyEvent.ACTION_DOWN) {
+            int evdev = KeyCodeMapper.getScanCode(event.getKeyCode());
+            if (evdev > 0) {
+                Native.nativeSendKey(0, evdev);
+                Native.nativeSendKey(1, evdev);
+            }
+        }
         return true;
     }
 
