@@ -10,6 +10,7 @@
     <string name="section_touchpad">觸控板設定</string>
     <string name="section_connection">連線</string>
     <string name="section_display">顯示</string>
+    <string name="section_screen_layout">畫面佈局</string>
     <string name="section_resolution">顯示解析度</string>
     <string name="section_screen_orientation">螢幕方向</string>
     <string name="section_notification">設定通知</string>
@@ -27,7 +28,7 @@
     <string name="cat_general_subtitle">通知與使用者操作</string>
 
     <!-- Bind key -->
-    <string name="bind_key_button">綁定虛擬鍵盤按鍵</string>
+    <string name="bind_key_button">綁定</string>
     <string name="raise_desktop_for_soft_keyboard">軟鍵盤彈出時抬起桌面</string>
     <string name="raise_desktop_for_soft_keyboard_hint">開啟後，桌面會縮小並向上移動，能看清正在輸入的內容。</string>
     <string name="listening_countdown">正在監聽…（%1$d 秒）</string>

@@ -1,6 +1,5 @@
 package com.anland.termux;
 
-import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.net.Uri;
@@ -26,18 +25,20 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.SeekBar; // ===== 新增导入
+import android.widget.SeekBar;
 import android.widget.Spinner;
 import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import androidx.activity.ComponentActivity;
 
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 
 
-public class SettingsActivity extends Activity {
+public class SettingsActivity extends ComponentActivity {
     private static final String TAG = "AnlandSettings";
     private static final String PREFS_NAME = "anland_settings";
     private static final String KEY_BOUND_KEYCODE = "bound_keycode";
@@ -117,7 +118,7 @@ public class SettingsActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        showHome();
+        ComposeSettings.install(this);
     }
 
     // ============================================================
@@ -304,18 +305,6 @@ public class SettingsActivity extends Activity {
         buildNotificationSection(root);
         buildUserActionsSection(root);
         setContent(root);
-    }
-
-    @Override
-    public void onBackPressed() {
-        // While listening for a key binding, let onKeyDown capture the Back key
-        // instead of navigating back.
-        if (isListening) return;
-        if (currentPage != Page.HOME) {
-            showHome();
-        } else {
-            super.onBackPressed();
-        }
     }
 
     // ============================================================
@@ -1233,13 +1222,15 @@ public class SettingsActivity extends Activity {
     private void startListening() {
         if (isListening) return;
         isListening = true;
-        bindButton.setText(getString(R.string.listening_countdown, 5));
+        if (bindButton != null)
+            bindButton.setText(getString(R.string.listening_countdown, 5));
 
         listenTimer = new CountDownTimer(5000, 1000) {
             @Override
             public void onTick(long millisUntilFinished) {
-                bindButton.setText(getString(R.string.listening_countdown,
-                    (int) (millisUntilFinished / 1000)));
+                if (bindButton != null)
+                    bindButton.setText(getString(R.string.listening_countdown,
+                        (int) (millisUntilFinished / 1000)));
             }
 
             @Override
@@ -1251,13 +1242,32 @@ public class SettingsActivity extends Activity {
 
     private void finishListening(int keycode) {
         isListening = false;
-        listenTimer.cancel();
+        if (listenTimer != null) {
+            listenTimer.cancel();
+            listenTimer = null;
+        }
 
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
         prefs.edit().putInt(KEY_BOUND_KEYCODE, keycode).apply();
 
-        bindButton.setText(R.string.bind_key_button);
+        if (bindButton != null)
+            bindButton.setText(R.string.bind_key_button);
         updateStatus();
+    }
+
+    /** Entry point used by the Compose settings surface. */
+    public void startKeyBindingFromCompose() {
+        startListening();
+    }
+
+    /** Exposes the transient key-binding state to Compose. */
+    public boolean isKeyBindingListening() {
+        return isListening;
+    }
+
+    /** Entry point used by the Compose custom-layout editor. */
+    public void pickLayoutFileFromCompose() {
+        pickLayoutFile();
     }
 
     private void updateStatus() {
@@ -1314,8 +1324,13 @@ public class SettingsActivity extends Activity {
             Toast.makeText(this, R.string.toast_read_failed, Toast.LENGTH_SHORT).show();
             return;
         }
-        // setText flows through the editor's TextWatcher, which persists + validates.
-        if (layoutInput != null) layoutInput.setText(text);
+        // The legacy editor uses a TextWatcher; Compose observes the preference.
+        if (layoutInput != null) {
+            layoutInput.setText(text);
+        } else {
+            getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
+                .putString(KEY_EXTRA_KEYS_LAYOUT, text).apply();
+        }
     }
 
     private String readTextFromUri(Uri uri) {
