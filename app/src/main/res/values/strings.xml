@@ -10,6 +10,7 @@
     <string name="section_touchpad">Touchpad Settings</string>
     <string name="section_connection">Connection</string>
     <string name="section_display">Display</string>
+    <string name="section_screen_layout">Screen layout</string>
     <string name="section_resolution">Display Resolution</string>
     <string name="section_screen_orientation">Screen Orientation</string>
     <string name="section_notification">Settings Notification</string>
@@ -27,7 +28,7 @@
     <string name="cat_general_subtitle">Notification and user actions</string>
 
     <!-- Bind key -->
-    <string name="bind_key_button">Bind Virtual Keyboard Key</string>
+    <string name="bind_key_button">Bind</string>
     <string name="raise_desktop_for_soft_keyboard">Raise desktop when soft keyboard opens</string>
     <string name="raise_desktop_for_soft_keyboard_hint">When on, the desktop shrinks and moves up so you can see what you type.</string>
     <string name="listening_countdown">Listening… (%1$ds)</string>
