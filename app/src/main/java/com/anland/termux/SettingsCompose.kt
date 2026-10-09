@@ -834,7 +834,7 @@ private fun responseLabelResource(response: String): Int = when (response) {
 @Composable
 private fun SectionTitle(@androidx.annotation.StringRes title: Int) {
     Text(stringResource(title), style = MaterialTheme.typography.titleMedium,
-        fontWeight = FontWeight.Bold, modifier = Modifier.padding(top = 8.dp))
+        fontWeight = FontWeight.Bold)
 }
 
 @Composable

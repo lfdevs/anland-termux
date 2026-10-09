@@ -22,7 +22,7 @@
     <string name="cat_keyboard_subtitle">按鍵綁定、無障礙與擴充按鍵列</string>
     <string name="cat_touchpad_title">觸控板與滑鼠</string>
     <string name="cat_touchpad_subtitle">觸控板模式、指標擷取與靈敏度</string>
-    <string name="cat_connection_subtitle">socket、root、麥克風、相機與音訊延遲</string>
+    <string name="cat_connection_subtitle">socket、麥克風、相機與音訊</string>
     <string name="cat_display_subtitle">解析度、螢幕方向、螢幕缺角與子母畫面</string>
     <string name="cat_general_title">一般</string>
     <string name="cat_general_subtitle">通知與使用者操作</string>

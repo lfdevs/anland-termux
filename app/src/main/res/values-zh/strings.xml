@@ -22,7 +22,7 @@
     <string name="cat_keyboard_subtitle">按键绑定、无障碍与扩展按键栏</string>
     <string name="cat_touchpad_title">触摸板与鼠标</string>
     <string name="cat_touchpad_subtitle">触摸板模式、指针捕获与灵敏度</string>
-    <string name="cat_connection_subtitle">套接字、root、麦克风、摄像头与音频延迟</string>
+    <string name="cat_connection_subtitle">套接字、麦克风、摄像头与音频</string>
     <string name="cat_display_subtitle">分辨率、屏幕方向、屏幕缺角与画中画</string>
     <string name="cat_general_title">通用</string>
     <string name="cat_general_subtitle">通知与用户操作</string>

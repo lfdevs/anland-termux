@@ -22,7 +22,7 @@
     <string name="cat_keyboard_subtitle">Key binding, accessibility &amp; extra keys bar</string>
     <string name="cat_touchpad_title">Touchpad &amp; Mouse</string>
     <string name="cat_touchpad_subtitle">Touchpad mode, pointer capture &amp; sensitivity</string>
-    <string name="cat_connection_subtitle">Socket, root, mic, camera &amp; audio latency</string>
+    <string name="cat_connection_subtitle">Socket, mic, camera &amp; audio</string>
     <string name="cat_display_subtitle">Resolution, screen orientation, display cutout &amp; PIP</string>
     <string name="cat_general_title">General</string>
     <string name="cat_general_subtitle">Notification and user actions</string>
