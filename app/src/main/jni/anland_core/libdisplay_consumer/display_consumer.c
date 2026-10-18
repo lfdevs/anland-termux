@@ -3,6 +3,7 @@
 #include "../common/socket_utils.h"
 
 #include <errno.h>
+#include <fcntl.h>
 #include <poll.h>
 #include <pthread.h>
 #include <stdbool.h>
@@ -11,6 +12,7 @@
 #include <sys/eventfd.h>
 #include <sys/mman.h>
 #include <sys/socket.h>
+#include <time.h>
 #include <unistd.h>
 
 struct display_ctx {
@@ -25,9 +27,12 @@ struct display_ctx {
     uint32_t pixel_format;
     bool     fallback;
     bool     buffer_pending;
+    bool     idle_rendering;
+    unsigned int generation;
+    struct timespec selected_at;
 
     /* The display lib is called concurrently: the render thread (select_dmabuf /
-     * refresh_done / push_dmabufs), the event thread (poll_output_event /
+     * wait_refresh_done / push_dmabufs), the event thread (poll_output_event /
      * handle_resource_request) and JNI input threads (push_input_event*). Two locks
      * with a fixed order (state_lock -> data_lock) tame the resulting races:
      *   - state_lock guards `fallback`, every fd field, `shm_ptr` and `buffer_pending`
@@ -251,7 +256,16 @@ static bool try_exit_fallback(display_ctx *ctx)
     if (!won)
         return false;
 
-    push_dmabufs_internal(ctx);   /* outside the lock: may enter_fallback on failure */
+    if (push_dmabufs_internal(ctx) < 0)
+        return false;
+    /* Old producers ignore this fixed-size input event and retain their pacing.
+     * Only an explicit fence-channel ACK disables our legacy watchdog. */
+    struct InputEvent capabilities = {
+        .type = INPUT_TYPE_CAPABILITIES,
+        .capabilities.features = ANLAND_FEATURE_IDLE_RENDERING,
+    };
+    if (push_input_event(ctx, &capabilities) < 0)
+        return false;
     if (ctx->exit_fallback_cb)
         ctx->exit_fallback_cb(ctx->exit_fallback_userdata);
     return true;
@@ -269,6 +283,8 @@ static void enter_fallback(display_ctx *ctx)
     ctx->fallback = true;          /* set first: lockless hot-path writers bail early */
     free_resources(ctx);
     ctx->buffer_pending = false;
+    ctx->idle_rendering = false;
+    ctx->generation++;
 
     /* Fence out data_fd writers while the fds are closed and replaced. Null each
      * pointer/fd before closing so a racing lockless writer reads -1 / NULL and fails
@@ -400,16 +416,26 @@ int select_dmabuf(display_ctx *ctx, int idx)
     if (ctx->fallback) {
         try_exit_fallback(ctx);   /* holds state_lock internally for the transition */
         if (ctx->fallback)
-            return 0;
+            return -1;
     }
 
-    if (idx < 0 || idx >= ctx->stored_count)
+    pthread_mutex_lock(&ctx->state_lock);
+    if (ctx->fallback || ctx->buffer_pending || !ctx->shm_ptr ||
+        idx < 0 || idx >= ctx->stored_count) {
+        pthread_mutex_unlock(&ctx->state_lock);
         return -1;
+    }
 
     *ctx->shm_ptr = (uint32_t)idx;
     eventfd_t val = 1;
-    eventfd_write(ctx->buf_ready_efd, val);
+    if (eventfd_write(ctx->buf_ready_efd, val) < 0) {
+        pthread_mutex_unlock(&ctx->state_lock);
+        enter_fallback(ctx);
+        return -1;
+    }
     ctx->buffer_pending = true;
+    clock_gettime(CLOCK_MONOTONIC, &ctx->selected_at);
+    pthread_mutex_unlock(&ctx->state_lock);
     return 0;
 }
 
@@ -418,23 +444,57 @@ int select_dmabuf(display_ctx *ctx, int idx)
  * GPU-side before scanout). The producer sends exactly one message per frame on the
  * dedicated fence channel; the message itself is the "frame rendered" signal (no
  * separate eventfd, no cross-channel ordering) and the optional fence rides as
- * SCM_RIGHTS ancillary data. Returns the fence fd (caller owns it), or -1 if none /
- * on error. */
-int refresh_done(display_ctx *ctx)
+ * SCM_RIGHTS ancillary data. Idle capability acknowledgements do not consume the
+ * selected buffer. See the header for result codes and fence ownership. */
+int wait_refresh_done(display_ctx *ctx, int timeout_ms, int *fence_fd)
 {
-    if (!ctx->buffer_pending)
+    *fence_fd = -1;
+    pthread_mutex_lock(&ctx->state_lock);
+    if (ctx->fallback || !ctx->buffer_pending) {
+        pthread_mutex_unlock(&ctx->state_lock);
         return -1;
-
-    /* Block (with a 5s safety timeout) on the fence channel: the arrival of the
-     * producer's per-frame message is the render-done signal. Timeout / no POLLIN
-     * (producer stalled or gone) -> fall back so the render thread never hangs. */
-    struct pollfd pfd = { .fd = ctx->fence_fd, .events = POLLIN };
-    int ret = poll(&pfd, 1, 5000);
-    if (ret <= 0 || !(pfd.revents & POLLIN)) {
+    }
+    unsigned int generation = ctx->generation;
+    /* Keep the polled socket alive across a concurrent fallback. Never receive
+     * from a reused descriptor belonging to the next session. */
+    int fd = fcntl(ctx->fence_fd, F_DUPFD_CLOEXEC, 0);
+    pthread_mutex_unlock(&ctx->state_lock);
+    if (fd < 0) {
         enter_fallback(ctx);
         return -1;
     }
-    ctx->buffer_pending = false;
+
+    /* Bounded polls let the render thread notice shutdown without treating an
+     * idle compositor as disconnected. Unnegotiated peers keep the 5s watchdog. */
+    struct pollfd pfd = { .fd = fd, .events = POLLIN };
+    int ret = poll(&pfd, 1, timeout_ms);
+    int poll_errno = errno;
+    pthread_mutex_lock(&ctx->state_lock);
+    if (ctx->fallback || generation != ctx->generation) {
+        pthread_mutex_unlock(&ctx->state_lock);
+        close(fd);
+        return -1;
+    }
+    if (ret == 0 || (ret < 0 && poll_errno == EINTR)) {
+        struct timespec now;
+        clock_gettime(CLOCK_MONOTONIC, &now);
+        bool expired = !ctx->idle_rendering &&
+            (now.tv_sec - ctx->selected_at.tv_sec) * 1000000000LL +
+            now.tv_nsec - ctx->selected_at.tv_nsec >= 5000000000LL;
+        pthread_mutex_unlock(&ctx->state_lock);
+        close(fd);
+        if (expired) {
+            enter_fallback(ctx);
+            return -1;
+        }
+        return 0;
+    }
+    if (ret < 0 || !(pfd.revents & POLLIN)) {
+        pthread_mutex_unlock(&ctx->state_lock);
+        close(fd);
+        enter_fallback(ctx);
+        return -1;
+    }
 
     int rfence = -1;
     char b;
@@ -449,22 +509,51 @@ int refresh_done(display_ctx *ctx)
         .msg_control = cmsg.buf,
         .msg_controllen = sizeof(cmsg.buf),
     };
-    /* Non-blocking even though poll reported POLLIN: if a concurrent enter_fallback
-     * (from a JNI input thread) swapped fence_fd between the poll and this recvmsg,
-     * we get EAGAIN (n < 0) instead of reading a stale/foreign socket. A clean EOF
-     * (n == 0) means the producer closed the channel -> fall back. No fence in the
-     * message => queue with -1 ("ready now"). */
-    ssize_t n = recvmsg(ctx->fence_fd, &msg, MSG_DONTWAIT);
-    if (n == 0) {
+    /* Non-blocking despite POLLIN. EINTR/EAGAIN preserve the pending buffer;
+     * EOF and hard errors are connection loss, not a fence-less rendered frame. */
+    ssize_t n = recvmsg(fd, &msg, MSG_DONTWAIT | MSG_CMSG_CLOEXEC);
+    int recv_errno = errno;
+    close(fd);
+    if (n < 0 && (recv_errno == EINTR || recv_errno == EAGAIN || recv_errno == EWOULDBLOCK)) {
+        pthread_mutex_unlock(&ctx->state_lock);
+        return 0;
+    }
+    if (n <= 0) {
+        pthread_mutex_unlock(&ctx->state_lock);
         enter_fallback(ctx);
         return -1;
     }
-    if (n > 0) {
-        struct cmsghdr *c = CMSG_FIRSTHDR(&msg);
-        if (c && c->cmsg_type == SCM_RIGHTS)
-            memcpy(&rfence, CMSG_DATA(c), sizeof(int));
+    for (struct cmsghdr *c = CMSG_FIRSTHDR(&msg); c; c = CMSG_NXTHDR(&msg, c)) {
+        if (c->cmsg_level != SOL_SOCKET || c->cmsg_type != SCM_RIGHTS ||
+            c->cmsg_len < CMSG_LEN(sizeof(int)))
+            continue;
+        size_t count = (c->cmsg_len - CMSG_LEN(0)) / sizeof(int);
+        for (size_t i = 0; i < count; i++) {
+            int received;
+            memcpy(&received, (char *)CMSG_DATA(c) + i * sizeof(int), sizeof(int));
+            if (rfence < 0)
+                rfence = received;
+            else
+                close(received);
+        }
     }
-    return rfence;
+    if (!(msg.msg_flags & MSG_CTRUNC) && b == FENCE_MSG_IDLE_CAPABLE && rfence < 0) {
+        ctx->idle_rendering = true;
+        pthread_mutex_unlock(&ctx->state_lock);
+        return 0;
+    }
+    ctx->buffer_pending = false;
+    pthread_mutex_unlock(&ctx->state_lock);
+    if (!(msg.msg_flags & MSG_CTRUNC) && b == FENCE_MSG_RENDERED) {
+        *fence_fd = rfence;
+        return 1;
+    }
+    if (rfence >= 0)
+        close(rfence);
+    if (!(msg.msg_flags & MSG_CTRUNC) && b == FENCE_MSG_ABORTED)
+        return -2;
+    enter_fallback(ctx);
+    return -1;
 }
 
 int push_input_event(display_ctx *ctx, const struct InputEvent *event)

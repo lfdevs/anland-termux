@@ -603,23 +603,35 @@ static void *render_thread_func(void *arg)
         }
 
         if (idx < 0) {
-            api.queueBuffer(s->window, anb, -1);
+            api.cancelBuffer(s->window, anb, -1);
             usleep(16000);
             continue;
         }
 
         if (select_dmabuf(s->ctx, idx) < 0) {
-            api.queueBuffer(s->window, anb, -1);
-            usleep(16000);
+            api.cancelBuffer(s->window, anb, -1);
+            usleep(100000);
             continue;
         }
 
         /* The producer renders into the buffer and hands back a render-done fence
-         * over data_fd (reverse). Queue with it so SurfaceFlinger waits GPU-side
+         * over the dedicated fence socket. Queue with it so SurfaceFlinger waits GPU-side
          * before scanout -- this lets the producer submit before its GPU render
          * completes (no glFinish stall). rfence == -1 falls back to "ready now". */
-        int rfence = refresh_done(s->ctx);
-        api.queueBuffer(s->window, anb, rfence);
+        int rfence = -1;
+        int result;
+        do {
+            result = wait_refresh_done(s->ctx, 250, &rfence);
+        } while (result == 0 && s->running && !s->need_reconnect);
+        if (result == 1 && s->running && !s->need_reconnect) {
+            api.queueBuffer(s->window, anb, rfence);
+        } else {
+            // cancelBuffer takes ownership too: preserve any render fence so
+            // BufferQueue cannot reuse a buffer before the GPU is finished.
+            api.cancelBuffer(s->window, anb, rfence);
+            if (result < 0)
+                usleep(16000);
+        }
     }
 
     LOGI("render thread stopped");

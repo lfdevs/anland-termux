@@ -17,6 +17,12 @@
 #define DATA_MSG_INPUT_EXTEND_FDS  104
 #define DATA_MSG_BUFS_READY      200
 
+/* Fence responses. Idle mode requires an explicit capability acknowledgement. */
+#define FENCE_MSG_RENDERED 0
+#define FENCE_MSG_ABORTED 1
+#define FENCE_MSG_IDLE_CAPABLE 2
+#define ANLAND_FEATURE_IDLE_RENDERING (1u << 0)
+
 #define MAX_BUFS 8
 
 struct ctrl_msg {
@@ -63,6 +69,7 @@ struct buf_info {
 #define INPUT_TYPE_TEXT_INPUT      9
 #define INPUT_TYPE_ACTION 10
 #define INPUT_TYPE_RESOURCE 11
+#define INPUT_TYPE_CAPABILITIES 12
 
 #define SERVICE_TYPE_CAMERA 1
 
@@ -122,6 +129,9 @@ struct InputEvent {
             uint32_t type;
             uint32_t fdnum;//fdnum是fd的数量,后续会有fdnum个fd跟随在这个结构体后面
         } resource;
+        struct {
+            uint32_t features;
+        } capabilities;
         struct {
             uint32_t padding[4];
         };
