@@ -11,6 +11,7 @@
 * 支持 Termux 原生环境以及 PRoot 容器。这意味着即使你设备没有 Root 权限，也可以体验 Anland 加持下的 Wayland 桌面。
 * 基于自动构建的 Docker 工作流，提供开箱即用的 [PRoot-Distro](https://github.com/termux/proot-distro) 容器镜像。
 * 对于搭载高通骁龙处理器的设备，支持使用 Freedreno 及 Turnip 驱动进行硬件加速。
+* 支持通过 [Termux:VA](https://github.com/lfdevs/termux-va) 进行硬件视频解码和编码，可以按照该指南来进行尝试：[Termux:VA User Guide](https://github.com/lfdevs/termux-va/blob/main/doc/user-guide.md)
 
 ## 兼容性
 

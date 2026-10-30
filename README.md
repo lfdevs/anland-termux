@@ -11,6 +11,7 @@ Use [Anland](https://github.com/SuperTurtleDev/anland/tree/legacy) in Termux, in
 * Supports Termux native environments and PRoot containers. This means you can experience an Anland-powered Wayland desktop even if your device is not rooted.
 * Provides ready-to-use [PRoot-Distro](https://github.com/termux/proot-distro) container images built through automated Docker workflows.
 * Supports hardware acceleration with the Freedreno and Turnip drivers on devices with Qualcomm Snapdragon processors.
+* Supports hardware video decoding and encoding through [Termux:VA](https://github.com/lfdevs/termux-va). You can follow this guide to try it out: [Termux:VA User Guide](https://github.com/lfdevs/termux-va/blob/main/doc/user-guide.md)
 
 ## Compatibility
 
