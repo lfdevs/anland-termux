@@ -138,7 +138,7 @@ echo $TERMUX_APP__APK_RELEASE
 
 4. 在实际运行环境中安装 Freedreno (KGSL) 驱动。
 
-   对于 Termux Native，请按照该页面的说明进行安装：<https://github.com/lfdevs/termux-packages/releases/tag/freedreno-27.0.0-devel-20261025>。
+   对于 Termux Native，请按照该页面的说明进行安装：<https://github.com/lfdevs/termux-packages/releases/latest>。
 
    对于 Linux 容器，请按照该页面的说明进行安装：<https://github.com/lfdevs/mesa-for-android-container/releases/latest>
   

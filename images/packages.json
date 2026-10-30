@@ -4,12 +4,12 @@
     "distributions": {
       "debian": {
         "trixie": {
-            "arm64": "https://github.com/lfdevs/mesa-for-android-container/releases/download/mesa-27.0.0-devel-20261025/mesa-for-android-container_27.0.0-devel-20261025_debian_trixie_arm64.tar.gz"
+            "arm64": "https://github.com/lfdevs/mesa-for-android-container/releases/download/mesa-27.0.0-devel-20261025-r1/mesa-for-android-container_27.0.0-devel-20261025-r1_debian_trixie_arm64.tar.gz"
         }
       },
       "ubuntu": {
         "resolute": {
-            "arm64": "https://github.com/lfdevs/mesa-for-android-container/releases/download/mesa-27.0.0-devel-20261025/mesa-for-android-container_27.0.0-devel-20261025_ubuntu_resolute_arm64.tar.gz"
+            "arm64": "https://github.com/lfdevs/mesa-for-android-container/releases/download/mesa-27.0.0-devel-20261025-r1/mesa-for-android-container_27.0.0-devel-20261025-r1_ubuntu_resolute_arm64.tar.gz"
         }
       }
     }
