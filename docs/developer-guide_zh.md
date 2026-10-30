@@ -341,7 +341,7 @@ Termux 软件包关联的 Pull request：https://github.com/lfdevs/termux-packag
 
 构建方法请参考该项目的开发文档。该分支包含供 Android 容器使用的 Freedreno 和 Turnip 修改，生成的归档包会作为构建 Debian 13 和 Ubuntu 26.04 容器镜像时的输入。
 
-Termux 软件包关联的 Pull requests：https://github.com/termux/termux-packages/pull/30162
+Termux 软件包关联的 Pull requests：https://github.com/lfdevs/termux-packages/pull/25
 
 ## GitHub Actions
 

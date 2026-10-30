@@ -359,7 +359,7 @@ Related Termux package pull request: https://github.com/lfdevs/termux-packages/p
 
 For build instructions, refer to that project’s developer documentation. This branch contains Freedreno and Turnip changes for Android containers; the generated archives are inputs when building the Debian 13 and Ubuntu 26.04 container images.
 
-Related Termux package pull request: https://github.com/termux/termux-packages/pull/30162
+Related Termux package pull request: https://github.com/lfdevs/termux-packages/pull/25
 
 ## GitHub Actions
 
