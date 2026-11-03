@@ -121,6 +121,7 @@
     <string name="user_response_no_action">無操作</string>
     <string name="user_response_toggle_soft_keyboard">切換軟鍵盤</string>
     <string name="user_response_toggle_additional_key_bar">切換擴充按鍵列</string>
+    <string name="user_response_toggle_floating_hud">切換浮動 HUD 控制項</string>
     <string name="user_response_open_preferences">開啟設定</string>
     <string name="user_response_release_captures">釋放指標和鍵盤擷取</string>
     <string name="user_response_restart_activity">重新啟動 Activity</string>
@@ -135,6 +136,7 @@
     <string name="notification_action_restart">重新啟動</string>
     <string name="notification_action_toggle_ime">切換輸入法</string>
     <string name="notification_action_toggle_extra_keys">切換擴充按鍵</string>
+    <string name="notification_action_toggle_hud">切換 HUD</string>
     <string name="notification_action_release_captures">釋放擷取</string>
     <string name="notification_action_touchpad_mode">觸控板模式</string>
     <string name="notification_action_screen_orientation">螢幕方向</string>

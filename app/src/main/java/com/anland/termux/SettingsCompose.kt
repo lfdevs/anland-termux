@@ -994,6 +994,7 @@ private fun UserActionSetting(prefs: SharedPreferences, action: String, title: I
 private fun responseLabelResource(response: String): Int = when (response) {
     UserActions.TOGGLE_SOFT_KEYBOARD -> R.string.user_response_toggle_soft_keyboard
     UserActions.TOGGLE_ADDITIONAL_KEY_BAR -> R.string.user_response_toggle_additional_key_bar
+    UserActions.TOGGLE_FLOATING_HUD -> R.string.user_response_toggle_floating_hud
     UserActions.OPEN_PREFERENCES -> R.string.user_response_open_preferences
     UserActions.RELEASE_POINTER_AND_KEYBOARD_CAPTURE -> R.string.user_response_release_captures
     UserActions.RESTART_ACTIVITY -> R.string.user_response_restart_activity

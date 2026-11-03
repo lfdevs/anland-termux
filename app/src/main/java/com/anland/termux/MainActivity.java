@@ -538,6 +538,8 @@ public class MainActivity extends Activity
                 return R.string.notification_action_toggle_ime;
             case UserActions.TOGGLE_ADDITIONAL_KEY_BAR:
                 return R.string.notification_action_toggle_extra_keys;
+            case UserActions.TOGGLE_FLOATING_HUD:
+                return R.string.notification_action_toggle_hud;
             case UserActions.OPEN_PREFERENCES:
                 return R.string.notification_action_preferences;
             case UserActions.RELEASE_POINTER_AND_KEYBOARD_CAPTURE:
@@ -835,6 +837,9 @@ public class MainActivity extends Activity
             case UserActions.TOGGLE_ADDITIONAL_KEY_BAR:
                 toggleExtraKeysBar();
                 break;
+            case UserActions.TOGGLE_FLOATING_HUD:
+                toggleFloatingHud();
+                break;
             case UserActions.OPEN_PREFERENCES:
                 startActivity(new Intent(this, SettingsActivity.class));
                 break;
@@ -869,6 +874,15 @@ public class MainActivity extends Activity
         Toast.makeText(this, isTouchpadMode
             ? R.string.toast_touchpad_mode_relative
             : R.string.toast_touchpad_mode_absolute, Toast.LENGTH_SHORT).show();
+    }
+
+    private void toggleFloatingHud() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        boolean enabled = !prefs.getBoolean(KEY_USE_HUD_OVERLAY, true);
+        prefs.edit().putBoolean(KEY_USE_HUD_OVERLAY, enabled).apply();
+        if (mHudOverlay == null) return;
+        if (!enabled) mHudOverlay.reset();
+        mHudOverlay.setVisibility(enabled ? View.VISIBLE : View.GONE);
     }
 
     private void toggleScreenOrientation() {
