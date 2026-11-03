@@ -410,7 +410,8 @@ public class MainActivity extends Activity
         root.addView(mHudOverlay, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT));
-        mHudOverlay.setVisibility(View.GONE);
+        mHudOverlay.setVisibility(getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .getBoolean(KEY_USE_HUD_OVERLAY, true) ? View.VISIBLE : View.GONE);
         mHudOverlay.post(() -> {
             if (mHudOverlay != null) mHudOverlay.rebuildActiveLayout();
         });

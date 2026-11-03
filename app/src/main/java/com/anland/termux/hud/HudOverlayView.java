@@ -59,7 +59,6 @@ public final class HudOverlayView extends FrameLayout implements IModifierProvid
     /* Shared with MainActivity / SettingsActivity / HudEditorActivity. Kept
      * here too so this view can read and write the profile on its own. */
     private static final String PREF_KEY_PROFILE = "hud_layout_profile_v2";
-    private static final String PREF_KEY_USE_HUD = "use_hud_overlay";
     /** Long-pressing the KB key hides every HUD control but the KB key itself. */
     private static final String PREF_KEY_HUD_HIDDEN = "hud_hidden_mode";
 
@@ -283,7 +282,6 @@ public final class HudOverlayView extends FrameLayout implements IModifierProvid
     public HudOverlayView(Context context, SharedPreferences prefs, HudHost host) {
         super(context);
         this.mPrefs = prefs;
-        setVisibility(prefs.getBoolean(PREF_KEY_USE_HUD, true) ? VISIBLE : GONE);
         this.mHost = host;
         this.mSnapEngine = new SnapGeometryEngine(getResources().getDisplayMetrics().density);
 
