@@ -456,6 +456,20 @@ private fun androidx.compose.foundation.lazy.LazyListScope.keyboardPage(
         }
     }
     item {
+        val hudEnabled = rememberBooleanPref(prefs, "use_hud_overlay", true)
+        SettingCard(contentPadding = 0.dp, itemSpacing = 0.dp) {
+            SwitchSetting(R.string.hud_controls_switch, R.string.hud_controls_hint, hudEnabled.value) {
+                hudEnabled.value = it
+                prefs.edit().putBoolean("use_hud_overlay", it).apply()
+            }
+            OutlinedButton(onClick = {
+                activity.startActivity(android.content.Intent(activity, HudEditorActivity::class.java))
+            }, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)) {
+                Text(stringResource(R.string.hud_edit_layout))
+            }
+        }
+    }
+    item {
         val extraKeysEnabled = rememberBooleanPref(prefs, KEY_EXTRA_KEYS_ENABLED, false)
         val autoShowExtraKeys = rememberBooleanPref(prefs, KEY_AUTO_SHOW_EXTRA_KEYS, true)
         SettingCard(contentPadding = 0.dp, itemSpacing = 0.dp) {

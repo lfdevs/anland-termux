@@ -47,6 +47,7 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.FrameLayout;
 import android.widget.Toast;
 import android.util.DisplayMetrics;   // ADDED
+import com.anland.termux.hud.HudOverlayView;
 
 import java.nio.charset.StandardCharsets;
 
@@ -91,6 +92,7 @@ public class MainActivity extends Activity
     private static final String KEY_EXTRA_KEYS_ENABLED = "extra_keys_bar";
     private static final String KEY_AUTO_SHOW_EXTRA_KEYS = "auto_show_extra_keys";
     private static final String KEY_EXTRA_KEYS_LAYOUT = "extra_keys_layout";
+    private static final String KEY_USE_HUD_OVERLAY = "use_hud_overlay";
     // Linux input-event-codes.h: KEY_BACK (the browser-back key).
     private static final int EVDEV_BROWSER_BACK = 158;
     // When on, the IME and extra-keys bar float over the display instead of
@@ -119,6 +121,7 @@ public class MainActivity extends Activity
     private int mBarHeight = 0;   // extra-keys bar height in px
     private ExtraKeysBar extraKeysBar;
     private FrameLayout mRoot;    // content root, host of the extra-keys bar
+    private HudOverlayView mHudOverlay;
     private float mDensity = 1f;
     private boolean mPointerCaptureEnabled = false;
     private String mCapturedPointerTransform = "no";
@@ -379,6 +382,38 @@ public class MainActivity extends Activity
             FrameLayout.LayoutParams.WRAP_CONTENT,
             Gravity.NO_GRAVITY
         ));
+        mHudOverlay = new HudOverlayView(this,
+                getSharedPreferences(PREFS_NAME, MODE_PRIVATE),
+                new HudOverlayView.HudHost() {
+            @Override public void sendKey(int action, int evdevCode) {
+                Native.nativeSendKey(action, evdevCode);
+            }
+            @Override public void sendTextInput(byte[] utf8) { Native.nativeSendTextInput(utf8); }
+            @Override public void sendMouseMotion(float dx, float dy) {
+                moveCapturedPointerBy(dx, dy, InputDevice.SOURCE_TOUCHSCREEN);
+            }
+            @Override public void sendMouseButton(int button, boolean pressed) {
+                Native.nativeSendMouseButton(button, pressed);
+            }
+            @Override public void sendMouseScroll(int axis, float value) {
+                Native.nativeSendMouseScroll(axis, value);
+            }
+            @Override public void toggleSystemKeyboard() { systemIme.toggleSystemKeyboard(); }
+            @Override public void toggleVirtualKeyboard() { MainActivity.this.toggleVirtualKeyboard(); }
+            @Override public void openSettings() {
+                startActivity(new Intent(MainActivity.this, SettingsActivity.class));
+            }
+            @Override public void onLayoutSaved() {}
+            @Override public boolean isNativeReady() { return surfaceReady; }
+            @Override public void onEditModeExited() {}
+        });
+        root.addView(mHudOverlay, new FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT));
+        mHudOverlay.setVisibility(View.GONE);
+        mHudOverlay.post(() -> {
+            if (mHudOverlay != null) mHudOverlay.rebuildActiveLayout();
+        });
         // Reposition the virtual keyboard when the root layout size changes
         // (e.g. freeform / small-window mode resize).
         root.addOnLayoutChangeListener((v, left, top, right, bottom,
@@ -728,6 +763,7 @@ public class MainActivity extends Activity
             .getBoolean(KEY_KEYBOARD_FLOATING, true);
         if (extraKeysBar != null)
             extraKeysBar.setFloating(mKeyboardFloating);
+        refreshHudOverlay();
         relayout();
 
         // Sync extra-keys bar visibility with the settings switches. With auto-show
@@ -896,12 +932,14 @@ public class MainActivity extends Activity
 
         if (isInPictureInPictureMode) {
             setExtraKeysBarVisible(false);
+            if (mHudOverlay != null) mHudOverlay.setVisibility(View.GONE);
             mVirtualKeyboardVisibleBeforePip = virtualKeyboardView != null
                 && virtualKeyboardView.getVisibility() == View.VISIBLE;
             if (mVirtualKeyboardVisibleBeforePip)
                 virtualKeyboardView.setVisibility(View.GONE);
         } else {
             setExtraKeysBarVisible(shouldShowBar(systemIme.isImeVisible()));
+            refreshHudOverlay();
             if (mVirtualKeyboardVisibleBeforePip && virtualKeyboardView != null) {
                 virtualKeyboardView.setVisibility(View.VISIBLE);
                 virtualKeyboardView.post(this::positionVirtualKeyboard);
@@ -1053,6 +1091,8 @@ public class MainActivity extends Activity
 
         mImeBottom = newImeBottom;
 
+        if (mHudOverlay != null) mHudOverlay.applySystemInsets(insets);
+
         if (imeVisible != wasImeVisible)
             syncExtraKeysBarWithIme(imeVisible);
 
@@ -1101,6 +1141,15 @@ public class MainActivity extends Activity
             extraKeysBar.setTranslationY(-mImeBottom);
     }
 
+    private void refreshHudOverlay() {
+        if (mHudOverlay == null) return;
+        mHudOverlay.loadProfile();
+        mHudOverlay.rebuildActiveLayout();
+        boolean enabled = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .getBoolean(KEY_USE_HUD_OVERLAY, true);
+        mHudOverlay.setVisibility(enabled ? View.VISIBLE : View.GONE);
+    }
+
     // Show/hide the extra-keys bar and re-apply the layout so the display area
     // is compressed (shown) or restored (hidden).
     private void setExtraKeysBarVisible(boolean visible) {
@@ -1125,21 +1174,7 @@ public class MainActivity extends Activity
             @Override public void toggleKeyboard() { systemIme.toggleSystemKeyboard(); }
             // Pulling up on the ⌨ key toggles the floating virtual keyboard.
             @Override public void toggleVirtualKeyboard() {
-                if (virtualKeyboardView.getVisibility() == View.VISIBLE) {
-                    virtualKeyboardView.setVisibility(View.GONE);
-                } else {
-                    Log.d("VirtualKeyboard", "toggle: showing keyboard, mRoot="
-                            + mRoot.getWidth() + "x" + mRoot.getHeight());
-                    virtualKeyboardView.setVisibility(View.VISIBLE);
-                    virtualKeyboardView.bringToFront();
-                    // Re-position it (in case screen size changed)
-                    positionVirtualKeyboard();
-                    // Hide the system IME to avoid overlap with the floating keyboard.
-                    InputMethodManager imm = getSystemService(InputMethodManager.class);
-                    if (imm != null && getCurrentFocus() != null) {
-                        imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
-                    }
-                }
+                MainActivity.this.toggleVirtualKeyboard();
             }
             @Override public void openSettings() {
                 startActivity(new Intent(MainActivity.this, SettingsActivity.class));
@@ -1155,6 +1190,25 @@ public class MainActivity extends Activity
             FrameLayout.LayoutParams.MATCH_PARENT, mBarHeight, Gravity.BOTTOM));
         mAppliedLayoutJson = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
             .getString(KEY_EXTRA_KEYS_LAYOUT, "");
+    }
+
+    private void toggleVirtualKeyboard() {
+        if (virtualKeyboardView == null) return;
+        if (virtualKeyboardView.getVisibility() == View.VISIBLE) {
+            virtualKeyboardView.setVisibility(View.GONE);
+        } else {
+            Log.d("VirtualKeyboard", "toggle: showing keyboard, mRoot="
+                    + mRoot.getWidth() + "x" + mRoot.getHeight());
+            virtualKeyboardView.setVisibility(View.VISIBLE);
+            virtualKeyboardView.bringToFront();
+            // Re-position it (in case screen size changed)
+            positionVirtualKeyboard();
+            // Hide the system IME to avoid overlap with the floating keyboard.
+            InputMethodManager imm = getSystemService(InputMethodManager.class);
+            if (imm != null && getCurrentFocus() != null) {
+                imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+            }
+        }
     }
 
     // Replace the bar with a freshly-parsed one after the user edits the layout in
@@ -1312,6 +1366,10 @@ public class MainActivity extends Activity
     // system from finishing the activity via gesture navigation.
     @Override
     public void onBackPressed() {
+        if (mHudOverlay != null && mHudOverlay.isEditMode()) {
+            mHudOverlay.requestExit();
+            return;
+        }
     }
 
     // Called from KeyInterceptor (accessibility service) to handle keys that
