@@ -411,7 +411,7 @@ public class MainActivity extends Activity
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT));
         mHudOverlay.setVisibility(getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-                .getBoolean(KEY_USE_HUD_OVERLAY, true) ? View.VISIBLE : View.GONE);
+                .getBoolean(KEY_USE_HUD_OVERLAY, false) ? View.VISIBLE : View.GONE);
         mHudOverlay.post(() -> {
             if (mHudOverlay != null) mHudOverlay.rebuildActiveLayout();
         });
@@ -878,7 +878,7 @@ public class MainActivity extends Activity
 
     private void toggleFloatingHud() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        boolean enabled = !prefs.getBoolean(KEY_USE_HUD_OVERLAY, true);
+        boolean enabled = !prefs.getBoolean(KEY_USE_HUD_OVERLAY, false);
         prefs.edit().putBoolean(KEY_USE_HUD_OVERLAY, enabled).apply();
         if (mHudOverlay == null) return;
         if (!enabled) mHudOverlay.reset();
@@ -1161,7 +1161,7 @@ public class MainActivity extends Activity
         mHudOverlay.loadProfile();
         mHudOverlay.rebuildActiveLayout();
         boolean enabled = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-                .getBoolean(KEY_USE_HUD_OVERLAY, true);
+                .getBoolean(KEY_USE_HUD_OVERLAY, false);
         mHudOverlay.setVisibility(enabled ? View.VISIBLE : View.GONE);
     }
 

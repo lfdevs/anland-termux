@@ -456,7 +456,7 @@ private fun androidx.compose.foundation.lazy.LazyListScope.keyboardPage(
         }
     }
     item {
-        val hudEnabled = rememberBooleanPref(prefs, "use_hud_overlay", true)
+        val hudEnabled = rememberBooleanPref(prefs, "use_hud_overlay", false)
         SettingCard(contentPadding = 0.dp, itemSpacing = 0.dp) {
             SwitchSetting(R.string.hud_controls_switch, R.string.hud_controls_hint, hudEnabled.value) {
                 hudEnabled.value = it
