@@ -163,11 +163,13 @@ final class SettingsBackup {
     private static Map<String, String> knownTypes() {
         Map<String, String> types = new HashMap<>();
         for (String key : new String[]{"bound_keycode", "custom_width", "custom_height",
-                "speaker_latency_ms", "mic_latency_ms", "captured_pointer_speed_factor"})
+                "speaker_latency_ms", "mic_latency_ms", "captured_pointer_speed_factor",
+                "hud_layout_slot"})
             types.put(key, "int");
         for (String key : new String[]{"mouse_speed", "scroll_speed", "touchpad_scroll_threshold",
                 "touchpad_move_threshold", "touchpad_gesture_scale"}) types.put(key, "float");
         for (String key : new String[]{"socket_path", "extra_keys_layout", "screen_orientation",
+                "hud_layout_profile_v2",
                 "transform_captured_pointer", DisplayCutoutMode.KEY, UserActions.VOLUME_UP,
                 UserActions.VOLUME_DOWN, UserActions.BACK_BUTTON, UserActions.NOTIFICATION_TAP,
                 UserActions.NOTIFICATION_FIRST_BUTTON, UserActions.NOTIFICATION_SECOND_BUTTON,
@@ -175,7 +177,8 @@ final class SettingsBackup {
         for (String key : new String[]{"use_root", "mic_enabled", "camera_enabled", "audio_keepalive",
                 "accessibility_key_intercept", "extra_keys_bar", "auto_show_extra_keys",
                 "keyboard_floating", "settings_notification", "pip_mode", "touchpad_mode",
-                "pointer_capture", "scroll_reverse", "back_opens_extra_keys"}) types.put(key, "boolean");
+                "pointer_capture", "scroll_reverse", "back_opens_extra_keys",
+                "use_hud_overlay", "hud_hidden_mode"}) types.put(key, "boolean");
         return types;
     }
 }
