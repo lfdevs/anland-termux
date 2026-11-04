@@ -349,6 +349,24 @@ fail:
     return -1;
 }
 
+int is_daemon_connected(display_ctx *ctx)
+{
+    if (!ctx)
+        return 0;
+
+    pthread_mutex_lock(&ctx->state_lock);
+    /* Observe hangup/errors without consuming a pending producer notification. */
+    struct pollfd pfd = { .fd = ctx->ctrl_fd, .events = 0 };
+    int ret;
+    do {
+        ret = poll(&pfd, 1, 0);
+    } while (ret < 0 && errno == EINTR);
+    int connected = pfd.fd >= 0 && ret >= 0 &&
+                    !(pfd.revents & (POLLERR | POLLHUP | POLLNVAL));
+    pthread_mutex_unlock(&ctx->state_lock);
+    return connected;
+}
+
 void disconnect(display_ctx *ctx)
 {
     if (!ctx)

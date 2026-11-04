@@ -24,6 +24,7 @@ public final class Native {
     // used by the event thread's clipboard callbacks.
     public static native void nativeStart(Surface surface, Object callbackTarget);
     public static native void nativeStop();
+    public static native boolean nativeIsConnected();
     public static native void nativeSetCustomResolution(int width, int height);
     public static native void nativeSendTouch(int action, float x, float y, int pointerId);
     public static native void nativeSendTouchFrame();

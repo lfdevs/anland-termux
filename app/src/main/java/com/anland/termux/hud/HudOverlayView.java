@@ -56,8 +56,8 @@ public final class HudOverlayView extends FrameLayout implements IModifierProvid
         void onEditModeExited();
     }
 
-    /* Shared with MainActivity / SettingsActivity / HudEditorActivity. Kept
-     * here too so this view can read and write the profile on its own. */
+    /* Shared with MainActivity / SettingsActivity so this view can read and
+     * write the profile on its own. */
     private static final String PREF_KEY_PROFILE = "hud_layout_profile_v2";
     /** Long-pressing the KB key hides every HUD control but the KB key itself. */
     private static final String PREF_KEY_HUD_HIDDEN = "hud_hidden_mode";
@@ -118,7 +118,7 @@ public final class HudOverlayView extends FrameLayout implements IModifierProvid
      * is scheduled and the fresh views keep their 0x0 measured size.
      * That is the "HUD disappears / lands in the wrong place after rotating"
      * bug: onSizeChanged() is called mid-layout, and both the standalone
-     * HudEditorActivity and the live desktop reach it on every rotation (and
+     * HUD editor and the live desktop reach it on every rotation (and
      * on IME / freeform resizes).
      *
      * The bookkeeping below lets a pure geometry change reposition the views
@@ -1723,6 +1723,7 @@ public final class HudOverlayView extends FrameLayout implements IModifierProvid
             // 5. Bottom-center daemon status banner (only when we know the host)
             if (mHost != null) {
                 drawDaemonBanner(canvas, w, h, density);
+                postInvalidateDelayed(500);
             }
         }
     }

@@ -463,7 +463,9 @@ private fun androidx.compose.foundation.lazy.LazyListScope.keyboardPage(
                 prefs.edit().putBoolean("use_hud_overlay", it).apply()
             }
             OutlinedButton(onClick = {
-                activity.startActivity(android.content.Intent(activity, HudEditorActivity::class.java))
+                activity.startActivity(android.content.Intent(activity, MainActivity::class.java)
+                    .setAction(MainActivity.ACTION_EDIT_HUD)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NO_USER_ACTION))
             }, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)) {
                 Text(stringResource(R.string.hud_edit_layout))
             }

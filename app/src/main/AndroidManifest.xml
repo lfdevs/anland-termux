@@ -45,13 +45,6 @@
                 <action android:name="android.intent.action.MAIN" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".HudEditorActivity"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|keyboardHidden"
-            android:excludeFromRecents="true"
-            android:exported="false"
-            android:resizeableActivity="true"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
         <receiver
             android:name=".UserActionReceiver"
             android:exported="false" />
