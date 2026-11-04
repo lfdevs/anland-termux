@@ -121,7 +121,7 @@
     <string name="user_response_no_action">无操作</string>
     <string name="user_response_toggle_soft_keyboard">切换软键盘</string>
     <string name="user_response_toggle_additional_key_bar">切换扩展按键栏</string>
-    <string name="user_response_toggle_floating_hud">切换浮动 HUD 控件</string>
+    <string name="user_response_toggle_floating_hud">循环切换浮动 HUD 布局</string>
     <string name="user_response_open_preferences">打开设置</string>
     <string name="user_response_release_captures">释放指针和键盘捕获</string>
     <string name="user_response_restart_activity">重启 Activity</string>
@@ -136,12 +136,14 @@
     <string name="notification_action_restart">重启</string>
     <string name="notification_action_toggle_ime">切换输入法</string>
     <string name="notification_action_toggle_extra_keys">切换扩展按键</string>
-    <string name="notification_action_toggle_hud">切换 HUD</string>
+    <string name="notification_action_toggle_hud">循环切换 HUD</string>
     <string name="notification_action_release_captures">释放捕获</string>
     <string name="notification_action_touchpad_mode">触摸板模式</string>
     <string name="notification_action_screen_orientation">屏幕方向</string>
 
     <!-- Toasts -->
+    <string name="toast_hud_disabled">浮动 HUD 控件已关闭</string>
+    <string name="toast_hud_layout">浮动 HUD：布局 %1$d</string>
     <string name="toast_no_picker">没有可用的文件选择器</string>
     <string name="toast_read_failed">无法读取文件</string>
     <string name="toast_touchpad_mode_relative">触摸板模式已切换为相对模式</string>

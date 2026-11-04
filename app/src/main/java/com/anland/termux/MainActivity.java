@@ -93,6 +93,7 @@ public class MainActivity extends Activity
     private static final String KEY_AUTO_SHOW_EXTRA_KEYS = "auto_show_extra_keys";
     private static final String KEY_EXTRA_KEYS_LAYOUT = "extra_keys_layout";
     private static final String KEY_USE_HUD_OVERLAY = "use_hud_overlay";
+    private static final String KEY_HUD_LAYOUT_SLOT = "hud_layout_slot";
     // Linux input-event-codes.h: KEY_BACK (the browser-back key).
     private static final int EVDEV_BROWSER_BACK = 158;
     // When on, the IME and extra-keys bar float over the display instead of
@@ -878,11 +879,22 @@ public class MainActivity extends Activity
 
     private void toggleFloatingHud() {
         SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
-        boolean enabled = !prefs.getBoolean(KEY_USE_HUD_OVERLAY, false);
-        prefs.edit().putBoolean(KEY_USE_HUD_OVERLAY, enabled).apply();
-        if (mHudOverlay == null) return;
-        if (!enabled) mHudOverlay.reset();
-        mHudOverlay.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        boolean wasEnabled = prefs.getBoolean(KEY_USE_HUD_OVERLAY, false);
+        int currentSlot = Math.max(0, Math.min(2, prefs.getInt(KEY_HUD_LAYOUT_SLOT, 0)));
+        boolean enabled = !wasEnabled || currentSlot < 2;
+        int nextSlot = wasEnabled ? Math.min(2, currentSlot + 1) : 0;
+        SharedPreferences.Editor editor = prefs.edit()
+                .putBoolean(KEY_USE_HUD_OVERLAY, enabled)
+                .putInt(KEY_HUD_LAYOUT_SLOT, nextSlot);
+        if (enabled) editor.putBoolean("hud_hidden_mode", false);
+        editor.apply();
+        if (mHudOverlay != null) {
+            mHudOverlay.reset();
+            refreshHudOverlay();
+        }
+        Toast.makeText(this, enabled
+                ? getString(R.string.toast_hud_layout, nextSlot + 1)
+                : getString(R.string.toast_hud_disabled), Toast.LENGTH_SHORT).show();
     }
 
     private void toggleScreenOrientation() {

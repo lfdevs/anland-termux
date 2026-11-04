@@ -121,7 +121,7 @@
     <string name="user_response_no_action">No action</string>
     <string name="user_response_toggle_soft_keyboard">Toggle soft keyboard</string>
     <string name="user_response_toggle_additional_key_bar">Toggle additional key bar</string>
-    <string name="user_response_toggle_floating_hud">Toggle floating HUD controls</string>
+    <string name="user_response_toggle_floating_hud">Cycle floating HUD layouts</string>
     <string name="user_response_open_preferences">Open preferences</string>
     <string name="user_response_release_captures">Release pointer and keyboard capture</string>
     <string name="user_response_restart_activity">Restart activity</string>
@@ -136,12 +136,14 @@
     <string name="notification_action_restart">Restart</string>
     <string name="notification_action_toggle_ime">Toggle IME</string>
     <string name="notification_action_toggle_extra_keys">Toggle extra keys</string>
-    <string name="notification_action_toggle_hud">Toggle HUD</string>
+    <string name="notification_action_toggle_hud">Cycle HUD</string>
     <string name="notification_action_release_captures">Release captures</string>
     <string name="notification_action_touchpad_mode">Touchpad mode</string>
     <string name="notification_action_screen_orientation">Screen orientation</string>
 
     <!-- Toasts -->
+    <string name="toast_hud_disabled">Floating HUD controls off</string>
+    <string name="toast_hud_layout">Floating HUD: layout %1$d</string>
     <string name="toast_no_picker">No file picker available</string>
     <string name="toast_read_failed">Could not read file</string>
     <string name="toast_touchpad_mode_relative">Touchpad mode switched to relative</string>
