@@ -21,6 +21,7 @@ public final class HudEditorActivity extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        ScreenOrientation.apply(this, getSharedPreferences(PREFS_NAME, MODE_PRIVATE));
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
         getWindow().setDecorFitsSystemWindows(false);
 
@@ -53,6 +54,12 @@ public final class HudEditorActivity extends Activity {
         hudOverlay.post(() -> {
             if (hudOverlay != null && !isFinishing()) hudOverlay.setEditMode(true);
         });
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        ScreenOrientation.apply(this, getSharedPreferences(PREFS_NAME, MODE_PRIVATE));
     }
 
     private void hideSystemBars() {
