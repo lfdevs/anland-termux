@@ -274,12 +274,12 @@
     <string name='hud_overlay_copy_portrait_here'>將直向配置複製到此處</string>
     <string name='hud_overlay_copy_landscape_here'>將橫向配置複製到此處</string>
     <string name='hud_overlay_productivity_preset'>桌面 / 生產力預設（10% 邊距）</string>
-    <string name='hud_overlay_user_portrait_hotkeys_layout'>使用者直向快速鍵配置</string>
+    <string name='hud_overlay_user_portrait_hotkeys_layout'>直向快速鍵預設</string>
     <string name='hud_overlay_clear_active_layout'>清除目前配置</string>
     <string name='hud_overlay_layout_options_title'>配置選項與預設</string>
     <string name='hud_overlay_copied'>配置已複製</string>
     <string name='hud_overlay_productivity_preset_loaded'>已載入桌面 / 生產力預設（10% 邊距）</string>
-    <string name='hud_overlay_user_portrait_layout_loaded'>已載入使用者直向配置</string>
+    <string name='hud_overlay_user_portrait_layout_loaded'>已載入直向快速鍵預設</string>
     <string name='hud_overlay_layout_cleared'>配置已清除</string>
     <string name='hud_overlay_add_standard_key_button'>標準按鍵按鈕</string>
     <string name='hud_overlay_add_super_gesture_nub'>Super 手勢區</string>

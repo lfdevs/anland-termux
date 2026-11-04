@@ -274,12 +274,12 @@
     <string name='hud_overlay_copy_portrait_here'>Copy Portrait Layout Here</string>
     <string name='hud_overlay_copy_landscape_here'>Copy Landscape Layout Here</string>
     <string name='hud_overlay_productivity_preset'>Desktop / Productivity Preset (10% Inset)</string>
-    <string name='hud_overlay_user_portrait_hotkeys_layout'>User Portrait Hotkeys Layout</string>
+    <string name='hud_overlay_user_portrait_hotkeys_layout'>Portrait Hotkey Preset</string>
     <string name='hud_overlay_clear_active_layout'>Clear Active Layout</string>
     <string name='hud_overlay_layout_options_title'>Layout Options &amp; Presets</string>
     <string name='hud_overlay_copied'>Layout Copied</string>
     <string name='hud_overlay_productivity_preset_loaded'>Desktop / Productivity Preset (10% Inset) Loaded</string>
-    <string name='hud_overlay_user_portrait_layout_loaded'>User Portrait Layout Loaded</string>
+    <string name='hud_overlay_user_portrait_layout_loaded'>Portrait Hotkey Preset Loaded</string>
     <string name='hud_overlay_layout_cleared'>Layout Cleared</string>
     <string name='hud_overlay_add_standard_key_button'>Standard Key Button</string>
     <string name='hud_overlay_add_super_gesture_nub'>Super Gesture Nub</string>

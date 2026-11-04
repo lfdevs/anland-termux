@@ -274,12 +274,12 @@
     <string name='hud_overlay_copy_portrait_here'>将竖屏布局复制到此处</string>
     <string name='hud_overlay_copy_landscape_here'>将横屏布局复制到此处</string>
     <string name='hud_overlay_productivity_preset'>桌面 / 办公预设（10% 内缩）</string>
-    <string name='hud_overlay_user_portrait_hotkeys_layout'>用户竖屏快捷键布局</string>
+    <string name='hud_overlay_user_portrait_hotkeys_layout'>竖屏快捷键预设</string>
     <string name='hud_overlay_clear_active_layout'>清空当前布局</string>
     <string name='hud_overlay_layout_options_title'>布局选项与预设</string>
     <string name='hud_overlay_copied'>已复制布局</string>
     <string name='hud_overlay_productivity_preset_loaded'>已载入桌面 / 办公预设（10% 内缩）</string>
-    <string name='hud_overlay_user_portrait_layout_loaded'>已载入用户竖屏布局</string>
+    <string name='hud_overlay_user_portrait_layout_loaded'>已载入竖屏快捷键预设</string>
     <string name='hud_overlay_layout_cleared'>已清空布局</string>
     <string name='hud_overlay_add_standard_key_button'>标准按键</string>
     <string name='hud_overlay_add_super_gesture_nub'>Super 手势区域</string>
