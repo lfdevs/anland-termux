@@ -7,6 +7,7 @@
 #include <jni.h>
 #include <pthread.h>
 #include <stdbool.h>
+#include <stdatomic.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/stat.h>
@@ -78,6 +79,9 @@ struct consumer_state {
 static struct consumer_state g_state = {
     .lock = PTHREAD_MUTEX_INITIALIZER,
 };
+
+/* Published by the render thread; JNI reads never dereference a retiring ctx. */
+static atomic_bool g_daemon_connected = false;
 
 /* Connection config, set from Java via nativeConfigure() and read on each
  * (re)connect in do_connect(). Guarded by cfg_lock. */
@@ -382,6 +386,7 @@ static int recv_fd_via_root_helper(const char *daemon_sock,
 
 static int do_connect(struct consumer_state *s)
 {
+    atomic_store(&g_daemon_connected, false);
     /* Snapshot the connection config for this attempt. */
     pthread_mutex_lock(&cfg_lock);
     bool use_root = cfg_use_root;
@@ -579,6 +584,9 @@ static void *render_thread_func(void *arg)
             }
         }
 
+        bool connected = is_daemon_connected(s->ctx);
+        atomic_store(&g_daemon_connected, connected);
+
         ANativeWindowBuffer *anb = NULL;
         int acqfence = -1;
         if (api.dequeueBuffer(s->window, &anb, &acqfence) != 0 || !anb) {
@@ -622,6 +630,7 @@ static void *render_thread_func(void *arg)
         api.queueBuffer(s->window, anb, rfence);
     }
 
+    atomic_store(&g_daemon_connected, false);
     LOGI("render thread stopped");
     return NULL;
 }
@@ -715,6 +724,7 @@ JNIEXPORT void JNICALL
 Java_com_anland_termux_Native_nativeStart(
     JNIEnv *env, jclass clazz, jobject surface, jobject callbackTarget)
 {
+    atomic_store(&g_daemon_connected, false);
     if (!api_loaded) {
         if (anw_api_load(&api) < 0) {
             LOGE("failed to load ANativeWindow hidden API");
@@ -779,6 +789,7 @@ JNIEXPORT void JNICALL
 Java_com_anland_termux_Native_nativeStop(
     JNIEnv *env, jclass clazz)
 {
+    atomic_store(&g_daemon_connected, false);
     pthread_mutex_lock(&g_state.lock);
 
     if (g_state.running) {
@@ -832,6 +843,14 @@ Java_com_anland_termux_Native_nativeStop(
     }
 
     pthread_mutex_unlock(&g_state.lock);
+}
+
+JNIEXPORT jboolean JNICALL
+Java_com_anland_termux_Native_nativeIsConnected(JNIEnv *env, jclass clazz)
+{
+    (void)env;
+    (void)clazz;
+    return atomic_load(&g_daemon_connected) ? JNI_TRUE : JNI_FALSE;
 }
 
 JNIEXPORT void JNICALL

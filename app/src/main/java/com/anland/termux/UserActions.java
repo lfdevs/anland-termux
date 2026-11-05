@@ -14,6 +14,7 @@ final class UserActions {
     static final String NO_ACTION = "no action";
     static final String TOGGLE_SOFT_KEYBOARD = "toggle soft keyboard";
     static final String TOGGLE_ADDITIONAL_KEY_BAR = "toggle additional key bar";
+    static final String TOGGLE_FLOATING_HUD = "toggle floating HUD";
     static final String OPEN_PREFERENCES = "open preferences";
     static final String RELEASE_POINTER_AND_KEYBOARD_CAPTURE =
         "release pointer and keyboard capture";
@@ -31,6 +32,7 @@ final class UserActions {
         NO_ACTION,
         TOGGLE_SOFT_KEYBOARD,
         TOGGLE_ADDITIONAL_KEY_BAR,
+        TOGGLE_FLOATING_HUD,
         OPEN_PREFERENCES,
         RELEASE_POINTER_AND_KEYBOARD_CAPTURE,
         RESTART_ACTIVITY,

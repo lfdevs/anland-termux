@@ -456,6 +456,22 @@ private fun androidx.compose.foundation.lazy.LazyListScope.keyboardPage(
         }
     }
     item {
+        val hudEnabled = rememberBooleanPref(prefs, "use_hud_overlay", false)
+        SettingCard(contentPadding = 0.dp, itemSpacing = 0.dp) {
+            SwitchSetting(R.string.hud_controls_switch, R.string.hud_controls_hint, hudEnabled.value) {
+                hudEnabled.value = it
+                prefs.edit().putBoolean("use_hud_overlay", it).apply()
+            }
+            OutlinedButton(onClick = {
+                activity.startActivity(android.content.Intent(activity, MainActivity::class.java)
+                    .setAction(MainActivity.ACTION_EDIT_HUD)
+                    .addFlags(android.content.Intent.FLAG_ACTIVITY_NO_USER_ACTION))
+            }, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp)) {
+                Text(stringResource(R.string.hud_edit_layout))
+            }
+        }
+    }
+    item {
         val extraKeysEnabled = rememberBooleanPref(prefs, KEY_EXTRA_KEYS_ENABLED, false)
         val autoShowExtraKeys = rememberBooleanPref(prefs, KEY_AUTO_SHOW_EXTRA_KEYS, true)
         SettingCard(contentPadding = 0.dp, itemSpacing = 0.dp) {
@@ -980,6 +996,7 @@ private fun UserActionSetting(prefs: SharedPreferences, action: String, title: I
 private fun responseLabelResource(response: String): Int = when (response) {
     UserActions.TOGGLE_SOFT_KEYBOARD -> R.string.user_response_toggle_soft_keyboard
     UserActions.TOGGLE_ADDITIONAL_KEY_BAR -> R.string.user_response_toggle_additional_key_bar
+    UserActions.TOGGLE_FLOATING_HUD -> R.string.user_response_toggle_floating_hud
     UserActions.OPEN_PREFERENCES -> R.string.user_response_open_preferences
     UserActions.RELEASE_POINTER_AND_KEYBOARD_CAPTURE -> R.string.user_response_release_captures
     UserActions.RESTART_ACTIVITY -> R.string.user_response_restart_activity
