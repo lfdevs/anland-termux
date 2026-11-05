@@ -159,9 +159,9 @@ package com.anland.termux;
                  ((ViewGroup) root).setClipChildren(false);
                  ((ViewGroup) root).setClipToPadding(false);
              }
-             if (getParent() instanceof ViewGroup) {
-                 bringToFront();
-             }
+             // Do not reorder siblings during ViewGroup's attachment walk:
+             // moving this keyboard can skip the HUD that follows it, leaving
+             // that overlay detached. The host raises the keyboard when shown.
          } catch (Exception e) {
              Log.e(TAG, "onAttachedToWindow error", e);
          }

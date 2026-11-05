@@ -414,12 +414,8 @@ public class MainActivity extends Activity
         root.addView(mHudOverlay, new FrameLayout.LayoutParams(
                 FrameLayout.LayoutParams.MATCH_PARENT,
                 FrameLayout.LayoutParams.MATCH_PARENT));
-        mHudOverlay.setVisibility(getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
-                .getBoolean(KEY_USE_HUD_OVERLAY, false) ? View.VISIBLE : View.GONE);
-        mHudOverlay.post(() -> {
-            if (mHudEditorRequested) beginHudEditing();
-            else if (mHudOverlay != null) mHudOverlay.rebuildActiveLayout();
-        });
+        setHudOverlayVisible(getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
+                .getBoolean(KEY_USE_HUD_OVERLAY, false));
         // Reposition the virtual keyboard when the root layout size changes
         // (e.g. freeform / small-window mode resize).
         root.addOnLayoutChangeListener((v, left, top, right, bottom,
@@ -809,6 +805,7 @@ public class MainActivity extends Activity
             .getBoolean(KEY_KEYBOARD_FLOATING, true);
         if (extraKeysBar != null)
             extraKeysBar.setFloating(mKeyboardFloating);
+        if (mHudEditorRequested && !mHudOverlay.isEditMode()) beginHudEditing();
         refreshHudOverlay();
         relayout();
 
@@ -980,7 +977,7 @@ public class MainActivity extends Activity
 
         if (isInPictureInPictureMode) {
             setExtraKeysBarVisible(false);
-            if (mHudOverlay != null) mHudOverlay.setVisibility(View.GONE);
+            setHudOverlayVisible(false);
             mVirtualKeyboardVisibleBeforePip = virtualKeyboardView != null
                 && virtualKeyboardView.getVisibility() == View.VISIBLE;
             if (mVirtualKeyboardVisibleBeforePip)
@@ -1193,14 +1190,29 @@ public class MainActivity extends Activity
         if (mHudOverlay == null) return;
         // Resuming an editor must preserve its unsaved in-memory changes.
         if (isHudEditing()) {
-            mHudOverlay.setVisibility(View.VISIBLE);
+            setHudOverlayVisible(true);
             return;
         }
-        mHudOverlay.loadProfile();
-        mHudOverlay.rebuildActiveLayout();
         boolean enabled = getSharedPreferences(PREFS_NAME, MODE_PRIVATE)
                 .getBoolean(KEY_USE_HUD_OVERLAY, false);
-        mHudOverlay.setVisibility(enabled ? View.VISIBLE : View.GONE);
+        // Show the measured overlay before rebuilding its widgets. A hidden
+        // sibling (the extra-keys bar) must never be needed to trigger layout.
+        setHudOverlayVisible(enabled && !isInPictureInPictureMode());
+        if (enabled) mHudOverlay.loadProfile();
+        else mHudOverlay.reset();
+    }
+
+    private void setHudOverlayVisible(boolean visible) {
+        if (mHudOverlay == null) return;
+        // INVISIBLE keeps the full-screen overlay measured while disabling
+        // drawing and input, independent of the extra-keys bar's GONE state.
+        mHudOverlay.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
+        mHudOverlay.requestLayout();
+        mHudOverlay.invalidate();
+        if (mRoot != null) {
+            mRoot.requestLayout();
+            mRoot.invalidate();
+        }
     }
 
     // Show/hide the extra-keys bar and re-apply the layout so the display area
