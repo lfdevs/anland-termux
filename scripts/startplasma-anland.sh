@@ -28,7 +28,7 @@ stop_plasma() {
 }
 
 set_common_environment() {
-    unset DISPLAY
+    unset DISPLAY SSH_CONNECTION
     export QT_QPA_PLATFORM=wayland
     export XDG_CURRENT_DESKTOP=KDE
     export XDG_SESSION_DESKTOP=KDE

@@ -912,6 +912,11 @@ run_gnome_shell() {
         "--wayland-display=$GNOME_WAYLAND_DISPLAY"
     )
 
+    # This is a local desktop even when launched over SSH. libpulse uses
+    # SSH_CONNECTION to query X11 properties synchronously, which can deadlock
+    # GNOME Shell against its own Xwayland during startup.
+    unset SSH_CONNECTION
+
     if ! xwayland_is_enabled; then
         shell_args+=(--no-x11)
     fi
