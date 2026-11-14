@@ -26,6 +26,16 @@ Based on Anland, this project connects the Android display client, the Termux da
 
 ## Transports
 
+The native consumer advertises `ANLAND_FEATURE_IDLE_RENDERING` through a
+fixed-size `INPUT_TYPE_CAPABILITIES` event after sending the dma-buf set. Only
+`FENCE_MSG_IDLE_CAPABLE` on the fence channel disables the legacy five-second
+frame watchdog. A selected buffer can then wait for scene damage indefinitely,
+with bounded polls for shutdown and socket-loss detection. `FENCE_MSG_RENDERED`
+queues the buffer (with its optional GPU fence); `FENCE_MSG_ABORTED` cancels it.
+Cancellation after receiving a render fence must transfer that fence to
+`cancelBuffer`, just as presentation transfers it to `queueBuffer`. The daemon
+only transfers the sockets and requires no new control message or fd slot.
+
 ### Standard Transport
 
 The standard APK relies on Android's shared-UID mechanism and is intended for the GitHub release of Termux:
