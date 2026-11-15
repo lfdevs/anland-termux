@@ -83,6 +83,8 @@ public class KeyCodeMapper {
         // configurable user actions when the Android event has no scan code.
         MAP.put(KeyEvent.KEYCODE_VOLUME_UP, 115);       // KEY_VOLUMEUP
         MAP.put(KeyEvent.KEYCODE_VOLUME_DOWN, 114);     // KEY_VOLUMEDOWN
+        MAP.put(KeyEvent.KEYCODE_BRIGHTNESS_DOWN, 224); // KEY_BRIGHTNESSDOWN
+        MAP.put(KeyEvent.KEYCODE_BRIGHTNESS_UP, 225);   // KEY_BRIGHTNESSUP
         MAP.put(KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE, 164); // KEY_PLAYPAUSE
         MAP.put(KeyEvent.KEYCODE_MEDIA_STOP, 128);      // KEY_STOP
         MAP.put(KeyEvent.KEYCODE_MEDIA_NEXT, 163);      // KEY_NEXTSONG
