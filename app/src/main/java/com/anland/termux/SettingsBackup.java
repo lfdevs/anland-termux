@@ -167,7 +167,8 @@ final class SettingsBackup {
                 "hud_layout_slot"})
             types.put(key, "int");
         for (String key : new String[]{"mouse_speed", "scroll_speed", "touchpad_scroll_threshold",
-                "touchpad_move_threshold", "touchpad_gesture_scale"}) types.put(key, "float");
+                "touchpad_move_threshold", "touchpad_gesture_scale",
+                "anland_window_brightness"}) types.put(key, "float");
         for (String key : new String[]{"socket_path", "extra_keys_layout", "screen_orientation",
                 "hud_layout_profile_v2",
                 "transform_captured_pointer", DisplayCutoutMode.KEY, UserActions.VOLUME_UP,

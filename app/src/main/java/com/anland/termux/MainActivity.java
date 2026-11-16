@@ -26,6 +26,7 @@ import android.os.Bundle;
 import android.os.IBinder;
 import android.os.ParcelFileDescriptor;
 import android.os.RemoteException;
+import android.provider.Settings;
 import android.util.Log;
 import android.util.SparseArray;
 import android.view.Display;
@@ -61,6 +62,8 @@ public class MainActivity extends Activity
     // System-clipboard bridge; also the target for the native clipboard callbacks.
     private Clipboard clipboard;
     private static final String PREFS_NAME = "anland_settings";
+    private static final String KEY_WINDOW_BRIGHTNESS = "anland_window_brightness";
+    private static final float WINDOW_BRIGHTNESS_STEP = 0.05f;
     private int customScreenWidth = 0;
     private int customScreenHeight = 0;
     private int viewWidth = 0;
@@ -96,6 +99,8 @@ public class MainActivity extends Activity
     private static final String KEY_HUD_LAYOUT_SLOT = "hud_layout_slot";
     // Linux input-event-codes.h: KEY_BACK (the browser-back key).
     private static final int EVDEV_BROWSER_BACK = 158;
+    private static final int EVDEV_KEY_BRIGHTNESSDOWN = 224;
+    private static final int EVDEV_KEY_BRIGHTNESSUP = 225;
     // When on, the IME and extra-keys bar float over the display instead of
     // shrinking it: the bar rides up with the keyboard but the surface keeps
     // its full size. See relayout() and buildExtraKeysBar().
@@ -327,6 +332,7 @@ public class MainActivity extends Activity
         // OnApplyWindowInsetsListener (so we can resize the surface) instead of
         // the system auto-panning the fullscreen window.
         getWindow().setDecorFitsSystemWindows(false);
+        applySavedWindowBrightness();
 
         surfaceView = new SurfaceView(this);
         surfaceView.setFocusable(true);
@@ -390,6 +396,10 @@ public class MainActivity extends Activity
                 getSharedPreferences(PREFS_NAME, MODE_PRIVATE),
                 new HudOverlayView.HudHost() {
             @Override public void sendKey(int action, int evdevCode) {
+                if (action == 0 && evdevCode == EVDEV_KEY_BRIGHTNESSUP)
+                    adjustWindowBrightness(WINDOW_BRIGHTNESS_STEP);
+                else if (action == 0 && evdevCode == EVDEV_KEY_BRIGHTNESSDOWN)
+                    adjustWindowBrightness(-WINDOW_BRIGHTNESS_STEP);
                 Native.nativeSendKey(action, evdevCode);
             }
             @Override public void sendTextInput(byte[] utf8) { Native.nativeSendTextInput(utf8); }
@@ -591,6 +601,12 @@ public class MainActivity extends Activity
                 return R.string.notification_action_touchpad_mode;
             case UserActions.TOGGLE_SCREEN_ORIENTATION:
                 return R.string.notification_action_screen_orientation;
+            case UserActions.ANDROID_BRIGHTNESS_UP:
+                return R.string.notification_action_brightness_up;
+            case UserActions.ANDROID_BRIGHTNESS_DOWN:
+                return R.string.notification_action_brightness_down;
+            case UserActions.ANDROID_BRIGHTNESS_SYSTEM:
+                return R.string.notification_action_brightness_system;
             default:
                 return 0;
         }
@@ -761,6 +777,10 @@ public class MainActivity extends Activity
         super.onResume();
         mPipTransitionPending = false;
 
+        // Android can restore Window attributes after activity transitions; reapply
+        // Anland's per-window override whenever the activity becomes visible.
+        applySavedWindowBrightness();
+
         requestMediaAudioFocus();
 
         String displayCutoutMode = DisplayCutoutMode.get(
@@ -880,9 +900,59 @@ public class MainActivity extends Activity
             case UserActions.TOGGLE_SCREEN_ORIENTATION:
                 toggleScreenOrientation();
                 break;
+            case UserActions.ANDROID_BRIGHTNESS_UP:
+                adjustWindowBrightness(WINDOW_BRIGHTNESS_STEP);
+                break;
+            case UserActions.ANDROID_BRIGHTNESS_DOWN:
+                adjustWindowBrightness(-WINDOW_BRIGHTNESS_STEP);
+                break;
+            case UserActions.ANDROID_BRIGHTNESS_SYSTEM:
+                resetWindowBrightness();
+                break;
             default:
                 break;
         }
+    }
+
+    /** Apply a saved override only to Anland's window; the Android setting stays untouched. */
+    private void applySavedWindowBrightness() {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        if (prefs.contains(KEY_WINDOW_BRIGHTNESS))
+            setWindowBrightness(prefs.getFloat(KEY_WINDOW_BRIGHTNESS, 0.5f));
+    }
+
+    private void adjustWindowBrightness(float delta) {
+        SharedPreferences prefs = getSharedPreferences(PREFS_NAME, MODE_PRIVATE);
+        float current = prefs.contains(KEY_WINDOW_BRIGHTNESS)
+                ? prefs.getFloat(KEY_WINDOW_BRIGHTNESS, 0.5f)
+                : readSystemWindowBrightness();
+        float brightness = Math.max(0.02f, Math.min(1.0f, current + delta));
+        prefs.edit().putFloat(KEY_WINDOW_BRIGHTNESS, brightness).apply();
+        setWindowBrightness(brightness);
+    }
+
+    private float readSystemWindowBrightness() {
+        try {
+            int value = Settings.System.getInt(
+                getContentResolver(), Settings.System.SCREEN_BRIGHTNESS);
+            return Math.max(0.02f, Math.min(1.0f, value / 255.0f));
+        } catch (Settings.SettingNotFoundException | SecurityException ignored) {
+            return 0.5f;
+        }
+    }
+
+    private void setWindowBrightness(float brightness) {
+        WindowManager.LayoutParams attributes = getWindow().getAttributes();
+        attributes.screenBrightness = Math.max(0.02f, Math.min(1.0f, brightness));
+        getWindow().setAttributes(attributes);
+    }
+
+    private void resetWindowBrightness() {
+        getSharedPreferences(PREFS_NAME, MODE_PRIVATE).edit()
+            .remove(KEY_WINDOW_BRIGHTNESS).apply();
+        WindowManager.LayoutParams attributes = getWindow().getAttributes();
+        attributes.screenBrightness = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE;
+        getWindow().setAttributes(attributes);
     }
 
     private void toggleTouchpadMode() {
@@ -1506,6 +1576,12 @@ public class MainActivity extends Activity
             return false;
 
         Native.nativeSendKey(action, evdev);
+        if (event.getAction() == KeyEvent.ACTION_DOWN && event.getRepeatCount() == 0) {
+            if (keyCode == KeyEvent.KEYCODE_BRIGHTNESS_UP)
+                adjustWindowBrightness(WINDOW_BRIGHTNESS_STEP);
+            else if (keyCode == KeyEvent.KEYCODE_BRIGHTNESS_DOWN)
+                adjustWindowBrightness(-WINDOW_BRIGHTNESS_STEP);
+        }
         return true;
     }
 

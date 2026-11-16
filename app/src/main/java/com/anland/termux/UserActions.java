@@ -25,6 +25,9 @@ final class UserActions {
     static final String SEND_VOLUME_UP = "send volume up";
     static final String SEND_VOLUME_DOWN = "send volume down";
     static final String SEND_MEDIA_ACTION = "send media action";
+    static final String ANDROID_BRIGHTNESS_UP = "android brightness up";
+    static final String ANDROID_BRIGHTNESS_DOWN = "android brightness down";
+    static final String ANDROID_BRIGHTNESS_SYSTEM = "use system brightness";
 
     private static final String LEGACY_BACK_OPENS_EXTRA_KEYS = "back_opens_extra_keys";
 
@@ -38,7 +41,10 @@ final class UserActions {
         RESTART_ACTIVITY,
         EXIT,
         TOGGLE_TOUCHPAD_MODE,
-        TOGGLE_SCREEN_ORIENTATION
+        TOGGLE_SCREEN_ORIENTATION,
+        ANDROID_BRIGHTNESS_UP,
+        ANDROID_BRIGHTNESS_DOWN,
+        ANDROID_BRIGHTNESS_SYSTEM
     };
 
     private UserActions() {}

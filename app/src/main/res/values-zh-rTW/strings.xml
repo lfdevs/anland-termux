@@ -131,6 +131,9 @@
     <string name="user_response_send_volume_up">傳送提高音量按鍵</string>
     <string name="user_response_send_volume_down">傳送降低音量按鍵</string>
     <string name="user_response_send_media_action">傳送媒體按鍵</string>
+    <string name="user_response_android_brightness_up">提高 Anland 視窗亮度</string>
+    <string name="user_response_android_brightness_down">降低 Anland 視窗亮度</string>
+    <string name="user_response_android_brightness_system">使用系統亮度</string>
     <string name="notification_action_preferences">設定</string>
     <string name="notification_action_exit">結束</string>
     <string name="notification_action_restart">重新啟動</string>
@@ -140,6 +143,9 @@
     <string name="notification_action_release_captures">釋放擷取</string>
     <string name="notification_action_touchpad_mode">觸控板模式</string>
     <string name="notification_action_screen_orientation">螢幕方向</string>
+    <string name="notification_action_brightness_up">亮度 +</string>
+    <string name="notification_action_brightness_down">亮度 −</string>
+    <string name="notification_action_brightness_system">系統亮度</string>
 
     <!-- Toasts -->
     <string name="toast_hud_disabled">浮動 HUD 控制項已關閉</string>

@@ -1006,6 +1006,9 @@ private fun responseLabelResource(response: String): Int = when (response) {
     UserActions.SEND_VOLUME_UP -> R.string.user_response_send_volume_up
     UserActions.SEND_VOLUME_DOWN -> R.string.user_response_send_volume_down
     UserActions.SEND_MEDIA_ACTION -> R.string.user_response_send_media_action
+    UserActions.ANDROID_BRIGHTNESS_UP -> R.string.user_response_android_brightness_up
+    UserActions.ANDROID_BRIGHTNESS_DOWN -> R.string.user_response_android_brightness_down
+    UserActions.ANDROID_BRIGHTNESS_SYSTEM -> R.string.user_response_android_brightness_system
     else -> R.string.user_response_no_action
 }
 
