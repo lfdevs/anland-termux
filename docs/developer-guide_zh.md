@@ -26,6 +26,15 @@
 
 ## 传输方式
 
+Native consumer 在发送 dma-buf 集合后，通过固定大小的
+`INPUT_TYPE_CAPABILITIES` 事件声明 `ANLAND_FEATURE_IDLE_RENDERING`。只有收到
+fence 通道上的 `FENCE_MSG_IDLE_CAPABLE` 确认，才停用原有的五秒帧超时检查。
+此后选中的缓冲区可以无限等待场景重绘请求，同时通过有界轮询检查线程退出和
+socket 断连。`FENCE_MSG_RENDERED` 提交缓冲区及可选的 GPU fence；
+`FENCE_MSG_ABORTED` 取消缓冲区。收到 render fence 后取消缓冲区时，必须像
+`queueBuffer` 一样将 fence 所有权交给 `cancelBuffer`。守护程序仅负责传递
+socket，不需要新增控制消息或 fd 槽位。
+
 ### Standard 传输方式
 
 Standard APK 依赖 Android 的 shared UID 机制，适用于 GitHub 发布的 Termux：
