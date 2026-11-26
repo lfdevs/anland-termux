@@ -151,6 +151,8 @@ Or, to run Anland: Termux with GNOME in Termux Native using the GitHub Termux re
 
    For Linux containers, follow the instructions on this page: <https://github.com/lfdevs/mesa-for-android-container/releases/latest>
 
+For Void Linux PRoot, the stock Void Mesa does not initialize KGSL surfaceless EGL. Use the Void-targeted lfdevs Mesa build and the dedicated [Void Linux guide](void-linux.md).
+
 5. Hold the XWayland, KWin, Weston, Mutter, and Mesa packages to prevent them from being affected by updates.
 
    For example, in Termux Native:
@@ -206,6 +208,10 @@ Or, to run Anland: Termux with GNOME in Termux Native using the GitHub Termux re
    proot-distro login debian --shared-tmp
    ```
 
+   Void Linux PRoot can skip `--shared-tmp` by using the dedicated
+   [`startplasma-anland-void.sh`](../scripts/startplasma-anland-void.sh) launcher,
+   which connects directly to the standard APK's socket under Termux `$TMPDIR`.
+
 3. After entering the runtime environment, download and run the following helper scripts.
 
 > [!TIP]
@@ -217,6 +223,14 @@ Or, to run Anland: Termux with GNOME in Termux Native using the GitHub Termux re
    curl -LO https://github.com/lfdevs/anland-termux/raw/refs/heads/main/scripts/startplasma-anland.sh
    chmod +x ./startplasma-anland.sh
    ./startplasma-anland.sh
+   ```
+
+   Void Linux PRoot: [startplasma-anland-void.sh](../scripts/startplasma-anland-void.sh)
+
+   ```sh
+   curl -LO https://github.com/lfdevs/anland-termux/raw/refs/heads/main/scripts/startplasma-anland-void.sh
+   chmod +x ./startplasma-anland-void.sh
+   ./startplasma-anland-void.sh
    ```
 
    Weston: [startweston-anland.sh](../scripts/startweston-anland.sh)
