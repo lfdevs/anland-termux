@@ -22,6 +22,9 @@ Use [Anland](https://github.com/SuperTurtleDev/anland/tree/legacy) in Termux, in
 | Termux native | ✔️ | ✔️ | ✔️ |
 | Debian 13 | ✔️ | ✔️ | ✔️ |
 | Ubuntu 26.04 LTS | ✔️ | ✔️ | ✔️ |
+| Void Linux (PRoot) | ✔️¹ | — | — |
+
+¹ Void requires a KWin package rebuilt from Void sources with the Anland patches and a Mesa build with the KGSL surfaceless EGL fix. See the [Void Linux guide](docs/void-linux.md).
 
 ### Processor support
 
@@ -37,6 +40,8 @@ Use [Anland](https://github.com/SuperTurtleDev/anland/tree/legacy) in Termux, in
 ## User Guide
 
 For instructions on installing and using Anland: Termux, see [Anland: Termux User Guide](docs/user-guide.md).
+
+For Void Linux PRoot with KDE Plasma 6, see the [Void Linux guide](docs/void-linux.md).
 
 ## Developer Documentation
 
